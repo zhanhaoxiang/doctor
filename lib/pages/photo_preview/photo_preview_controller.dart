@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../routes/app_routes.dart';
+import '../../services/ark_recognition_service.dart';
 
 class PhotoPreviewController extends GetxController {
   final imagePaths = <String>[].obs;
   final currentIndex = 0.obs;
+  final isRecognizing = false.obs;
   late final PageController pageController;
 
   @override
@@ -23,9 +25,34 @@ class PhotoPreviewController extends GetxController {
 
   void retake() => Get.back();
 
-  void startRecognition() {
-    // 将所有图片路径传给 OCR 页面
-    Get.toNamed(AppRoutes.ocrReview, arguments: imagePaths.toList());
+  Future<void> startRecognition() async {
+    if (imagePaths.isEmpty || isRecognizing.value) return;
+    isRecognizing.value = true;
+
+    try {
+      final result =
+          await ArkRecognitionService.recognize(imagePaths.toList());
+      isRecognizing.value = false;
+
+      Get.toNamed(
+        AppRoutes.edit,
+        arguments: {
+          'result': result,
+          'imagePaths': imagePaths.toList(),
+        },
+      );
+    } catch (e) {
+      isRecognizing.value = false;
+      debugPrint('Recognition error: $e');
+      Get.snackbar(
+        '识别失败',
+        '无法连接识别服务，请检查网络后重试',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.black87,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+    }
   }
 
   @override

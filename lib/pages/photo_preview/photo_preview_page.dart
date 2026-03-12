@@ -167,56 +167,125 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                     // 一键识别
                     Expanded(
                       flex: 2,
-                      child: GestureDetector(
-                        onTap: controller.startRecognition,
-                        child: Container(
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: AppColors.accent,
-                            borderRadius: BorderRadius.circular(999),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.accent.withValues(alpha: 0.45),
-                                blurRadius: 18,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
+                      child: Obx(() {
+                        final recognizing = controller.isRecognizing.value;
+                        return GestureDetector(
+                          onTap: recognizing ? null : controller.startRecognition,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: recognizing
+                                  ? AppColors.accent.withValues(alpha: 0.6)
+                                  : AppColors.accent,
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: recognizing
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color: AppColors.accent
+                                            .withValues(alpha: 0.45),
+                                        blurRadius: 18,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                            ),
+                            child: Center(
+                              child: recognizing
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
+                                  : Obx(() {
+                                      final count =
+                                          controller.imagePaths.length;
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                              Icons.auto_awesome_rounded,
+                                              color: Colors.white,
+                                              size: 18),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            count > 1
+                                                ? '一键识别（$count张）'
+                                                : '一键识别',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    }),
+                            ),
                           ),
-                          child: Center(
-                            child: Obx(() {
-                              final count = controller.imagePaths.length;
-                              return Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.auto_awesome_rounded,
-                                      color: Colors.white, size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    count > 1
-                                        ? '一键识别（$count张）'
-                                        : '一键识别',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }),
-                          ),
-                        ),
-                      ),
+                        );
+                      }),
                     ),
                   ],
                 ),
               ],
             ),
           ),
+          // ── 识别中全屏遮罩 ───────────────────────────────
+          Obx(() {
+            if (!controller.isRecognizing.value) return const SizedBox.shrink();
+            return Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.82),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: CircularProgressIndicator(
+                            color: AppColors.accent,
+                            strokeWidth: 3,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'AI 正在识别病历...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '正在提取医院、科室、诊断、医嘱等信息',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );
   }
 }
-
 

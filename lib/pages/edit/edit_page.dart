@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
+import '../../data/models/record_attachment.dart';
+import 'edit_controller.dart';
 
-class EditPage extends StatelessWidget {
+class EditPage extends GetView<EditController> {
   const EditPage({super.key});
 
   @override
@@ -11,97 +14,475 @@ class EditPage extends StatelessWidget {
     return CommonPage(
       title: '编辑病历',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('保存', '病历已保存', snackPosition: SnackPosition.BOTTOM),
+        onTap: controller.save,
         child: const Padding(
           padding: EdgeInsets.only(right: 4),
-          child: Text('保存',
-              style: TextStyle(fontSize: 15, color: AppColors.accent, fontWeight: FontWeight.w600)),
+          child: Text(
+            '保存',
+            style: TextStyle(
+              fontSize: 15,
+              color: AppColors.accent,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ),
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          sliver: SliverToBoxAdapter(child: _buildFormCard()),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          sliver: SliverToBoxAdapter(child: _buildMemberRow(context)),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          sliver: SliverToBoxAdapter(child: _buildBasicCard(context)),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          sliver: SliverToBoxAdapter(child: _buildAiCard()),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          sliver: SliverToBoxAdapter(child: _buildAttachmentsCard(context)),
         ),
       ],
     );
   }
 
-  Widget _buildFormCard() {
+  // ── 成员选择行 ─────────────────────────────────────────
+  Widget _buildMemberRow(BuildContext context) {
+    return _CardContainer(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _showMemberPicker(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 72,
+                child: Text('就诊成员',
+                    style: TextStyle(fontSize: 13, color: AppColors.ink3)),
+              ),
+              Expanded(
+                child: Obx(() => Text(
+                      controller.selectedMember.value,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.ink1,
+                          fontWeight: FontWeight.w500),
+                    )),
+              ),
+              const Icon(Icons.chevron_right_rounded,
+                  size: 16, color: AppColors.ink3),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── 基本信息卡片（可编辑） ───────────────────────────────
+  Widget _buildBasicCard(BuildContext context) {
+    return _CardContainer(
+      child: Column(
+        children: [
+          _FieldRow(
+            label: '就诊日期',
+            controller: controller.visitDateCtrl,
+            hint: '请输入或选择日期',
+            readOnly: true,
+            suffix: const Icon(Icons.calendar_today_rounded,
+                size: 14, color: AppColors.ink3),
+            onTap: () => controller.pickDate(context),
+          ),
+          _divider(),
+          _FieldRow(
+            label: '医院',
+            controller: controller.hospitalCtrl,
+            hint: '请输入医院名称',
+          ),
+          _divider(),
+          _FieldRow(
+            label: '科室',
+            controller: controller.departmentCtrl,
+            hint: '请输入科室名称',
+          ),
+          _divider(),
+          _FieldRow(
+            label: '接诊医生',
+            controller: controller.doctorCtrl,
+            hint: '请输入医生姓名',
+          ),
+          _divider(),
+          _FieldRow(
+            label: '诊断',
+            controller: controller.diagnosisCtrl,
+            hint: '请输入诊断结论',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── AI 摘要 + 医嘱（可编辑多行） ───────────────────────
+  Widget _buildAiCard() {
+    return _CardContainer(
+      child: Column(
+        children: [
+          _MultiFieldRow(
+            label: 'AI 摘要',
+            controller: controller.summaryCtrl,
+            hint: '就诊情况摘要，可手动修改',
+          ),
+          _divider(),
+          _MultiFieldRow(
+            label: '医嘱',
+            controller: controller.prescriptionCtrl,
+            hint: '用药及注意事项',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── 附件区 ─────────────────────────────────────────────
+  Widget _buildAttachmentsCard(BuildContext context) {
+    return _CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(14, 12, 14, 8),
+            child: Text(
+              '附件',
+              style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.ink3,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+          Obx(() {
+            final items = controller.attachments;
+            if (items.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                child: Text(
+                  '暂无附件',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.ink3.withValues(alpha: 0.6)),
+                ),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: items
+                    .map((a) => _AttachmentTile(
+                          attachment: a,
+                          onRemove: () =>
+                              controller.removeAttachment(a.id),
+                        ))
+                    .toList(),
+              ),
+            );
+          }),
+          _divider(),
+          // 添加按钮行
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                _AddButton(
+                  icon: Icons.document_scanner_rounded,
+                  label: '拍照扫描',
+                  onTap: controller.addPhotoFromCamera,
+                ),
+                const SizedBox(width: 10),
+                _AddButton(
+                  icon: Icons.photo_library_rounded,
+                  label: '从相册选取',
+                  onTap: controller.addPhotoFromGallery,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _divider() =>
+      const Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14);
+
+  void _showMemberPicker(BuildContext context) {
+    final members = ['妈妈', '爸爸', '大宝', '小宝'];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.line,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('选择就诊成员',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink1)),
+          const SizedBox(height: 8),
+          ...members.map((m) => ListTile(
+                title:
+                    Text(m, style: const TextStyle(color: AppColors.ink1)),
+                trailing: Obx(() => controller.selectedMember.value == m
+                    ? const Icon(Icons.check_rounded,
+                        color: AppColors.accent)
+                    : const SizedBox.shrink()),
+                onTap: () {
+                  controller.selectedMember.value = m;
+                  Get.back();
+                },
+              )),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 可复用组件 ──────────────────────────────────────────────
+
+class _CardContainer extends StatelessWidget {
+  const _CardContainer({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line),
       ),
-      child: Column(
+      child: child,
+    );
+  }
+}
+
+class _FieldRow extends StatelessWidget {
+  const _FieldRow({
+    required this.label,
+    required this.controller,
+    required this.hint,
+    this.readOnly = false,
+    this.suffix,
+    this.onTap,
+  });
+  final String label;
+  final TextEditingController controller;
+  final String hint;
+  final bool readOnly;
+  final Widget? suffix;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      child: Row(
         children: [
-          _EditRow(label: '成员', value: '妈妈', hasChevron: true,
-              onTap: () => Get.snackbar('成员', '选择家庭成员', snackPosition: SnackPosition.BOTTOM)),
-          Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14),
-          const _EditRow(label: '就诊日期', value: '2026-03-08'),
-          Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14),
-          const _EditRow(label: '医院', value: '北京协和医院'),
-          Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14),
-          const _EditRow(label: '科室', value: '呼吸内科'),
-          Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14),
-          const _EditMultiRow(label: 'AI摘要', value: '患者咳嗽2周，X线影像提示轻度炎症，无发热，血常规正常。'),
-          Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14),
-          const _EditMultiRow(label: '医嘱', value: '布洛芬10ml，每8小时一次；多饮水；3天后复诊。'),
+          SizedBox(
+            width: 72,
+            child: Text(label,
+                style:
+                    const TextStyle(fontSize: 13, color: AppColors.ink3)),
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              readOnly: readOnly,
+              onTap: onTap,
+              style: const TextStyle(fontSize: 13, color: AppColors.ink1),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.ink3.withValues(alpha: 0.6)),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                suffixIcon: suffix,
+                suffixIconConstraints:
+                    const BoxConstraints(maxHeight: 32, maxWidth: 32),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _EditRow extends StatelessWidget {
-  const _EditRow({required this.label, required this.value, this.hasChevron = false, this.onTap});
+class _MultiFieldRow extends StatelessWidget {
+  const _MultiFieldRow({
+    required this.label,
+    required this.controller,
+    required this.hint,
+  });
   final String label;
-  final String value;
-  final bool hasChevron;
-  final VoidCallback? onTap;
+  final TextEditingController controller;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: const TextStyle(fontSize: 13, color: AppColors.ink3)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            maxLines: null,
+            keyboardType: TextInputType.multiline,
+            style: const TextStyle(
+                fontSize: 13, color: AppColors.ink1, height: 1.6),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.ink3.withValues(alpha: 0.6)),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttachmentTile extends StatelessWidget {
+  const _AttachmentTile(
+      {required this.attachment, required this.onRemove});
+  final RecordAttachment attachment;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 80,
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: attachment.isImage
+                    ? Image.file(
+                        File(attachment.path),
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _iconFallback(attachment),
+                      )
+                    : _iconFallback(attachment),
+              ),
+              Positioned(
+                top: 2,
+                right: 2,
+                child: GestureDetector(
+                  onTap: onRemove,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.close_rounded,
+                        size: 12, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            attachment.typeLabel,
+            style: const TextStyle(fontSize: 10, color: AppColors.ink3),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconFallback(RecordAttachment a) {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: a.iconColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Icon(a.icon, color: a.iconColor, size: 32),
+      ),
+    );
+  }
+}
+
+class _AddButton extends StatelessWidget {
+  const _AddButton(
+      {required this.icon, required this.label, required this.onTap});
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.accentLight,
+          borderRadius: BorderRadius.circular(20),
+        ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 72,
-              child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.ink3)),
+            Icon(icon, size: 14, color: AppColors.accent),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w500),
             ),
-            Expanded(
-              child: Text(value, style: const TextStyle(fontSize: 13, color: AppColors.ink1)),
-            ),
-            if (hasChevron)
-              const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.ink3),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _EditMultiRow extends StatelessWidget {
-  const _EditMultiRow({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.ink3)),
-          const SizedBox(height: 6),
-          Text(value, style: const TextStyle(fontSize: 13, color: AppColors.ink1, height: 1.6)),
-        ],
       ),
     );
   }
