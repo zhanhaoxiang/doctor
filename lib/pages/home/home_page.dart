@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import 'home_controller.dart';
-import 'widgets/bottom_dock.dart';
 import 'widgets/capture_card.dart';
 import 'widgets/family_chips_bar.dart';
 import 'widgets/reminder_banner.dart';
@@ -14,7 +13,6 @@ class HomePage extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -70,12 +68,7 @@ class HomePage extends GetView<HomeController> {
             ),
           ),
 
-          // ── 固定底部 Dock（含 Home Indicator 安全区）──────
-          const BottomDock(),
-          SizedBox(
-            height: bottomPadding,
-            child: const ColoredBox(color: Colors.white),
-          ),
+
         ],
       ),
     );

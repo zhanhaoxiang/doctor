@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/medical_record.dart';
 import '../../../data/models/family_member.dart';
+import '../../../routes/app_routes.dart';
 
 class TimelineCardItem extends StatelessWidget {
   final MedicalRecord record;
@@ -17,84 +19,91 @@ class TimelineCardItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final accentColor = member?.accentColor ?? AppColors.accent;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.card,
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => Get.toNamed(AppRoutes.detail, arguments: record),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.line),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.hardEdge,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 左侧彩色边条
-            Container(width: 4, color: accentColor),
-            // 内容
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 医院名 + 日期
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          record.hospitalName,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.ink1,
-                          ),
-                        ),
-                        Text(
-                          record.formattedDate,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.ink3,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    // AI 摘要
-                    Text(
-                      record.aiSummary,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.ink2,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // 标签行
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        ...record.tags.map((tag) => _TagChip(tag: tag)),
-                        if (member != null)
-                          _ColoredTagChip(
-                            label: '#${member!.name}',
-                            bgColor: member!.tagBgColor,
-                            textColor: member!.tagTextColor,
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.line),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
+            ],
+          ),
+          clipBehavior: Clip.hardEdge,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 左侧彩色边条
+                Container(width: 4, color: accentColor),
+                // 内容
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 医院名 + 日期
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              record.hospitalName,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.ink1,
+                              ),
+                            ),
+                            Text(
+                              record.formattedDate,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.ink3,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        // AI 摘要
+                        Text(
+                          record.aiSummary,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.ink2,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // 标签行
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            ...record.tags.map((tag) => _TagChip(tag: tag)),
+                            if (member != null)
+                              _ColoredTagChip(
+                                label: '#${member!.name}',
+                                bgColor: member!.tagBgColor,
+                                textColor: member!.tagTextColor,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
