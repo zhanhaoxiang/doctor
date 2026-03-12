@@ -2,18 +2,23 @@ import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../routes/app_routes.dart';
 
 class ScanCameraController extends GetxController {
   final isScanning = false.obs;
+  final isPicking = false.obs;
 
+  final _picker = ImagePicker();
+
+  // ── 启动文档扫描仪 ──────────────────────────────────────
   Future<void> startScan() async {
     if (isScanning.value) return;
     isScanning.value = true;
 
     try {
       final pictures = await CunningDocumentScanner.getPictures(
-        isGalleryImportAllowed: true,
+        isGalleryImportAllowed: false,
       );
 
       isScanning.value = false;
@@ -26,7 +31,7 @@ class ScanCameraController extends GetxController {
       debugPrint('Scanner PlatformException: ${e.code} - ${e.message}');
       Get.snackbar(
         '扫描失败',
-        '设备不支持文档扫描，请重试',
+        '设备不支持文档扫描，请使用相册导入',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.black87,
         colorText: Colors.white,
@@ -50,6 +55,32 @@ class ScanCameraController extends GetxController {
     }
   }
 
+  // ── 从相册选取（支持多选）──────────────────────────────
+  Future<void> pickFromGallery() async {
+    if (isPicking.value) return;
+    isPicking.value = true;
+
+    try {
+      final images = await _picker.pickMultiImage(imageQuality: 95);
+      isPicking.value = false;
+
+      if (images.isNotEmpty) {
+        final paths = images.map((e) => e.path).toList();
+        Get.toNamed(AppRoutes.photoPreview, arguments: paths);
+      }
+    } catch (e) {
+      isPicking.value = false;
+      debugPrint('Gallery pick error: $e');
+      Get.snackbar(
+        '选取失败',
+        '无法访问相册，请检查权限',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.black87,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   void _showPermissionDialog() {
     Get.dialog(
       AlertDialog(
@@ -61,11 +92,8 @@ class ScanCameraController extends GetxController {
             child: const Text('取消'),
           ),
           TextButton(
-            onPressed: () {
-              Get.back();
-              // 引导用户去设置页面
-            },
-            child: const Text('去设置'),
+            onPressed: Get.back,
+            child: const Text('好的'),
           ),
         ],
       ),

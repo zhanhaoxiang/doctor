@@ -78,14 +78,26 @@ class CameraPage extends GetView<ScanCameraController> {
             ),
           ),
 
-          // ── 底部扫描按钮 ─────────────────────────────────
+          // ── 底部按钮组 ───────────────────────────────────
           Positioned(
-            bottom: safeBottom + 32,
+            bottom: safeBottom + 24,
             left: 24,
             right: 24,
-            child: Obx(() => _ScanButton(
-                  isScanning: controller.isScanning.value,
-                  onTap: controller.startScan,
+            child: Obx(() => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 扫描按钮
+                    _ScanButton(
+                      isScanning: controller.isScanning.value,
+                      onTap: controller.startScan,
+                    ),
+                    const SizedBox(height: 14),
+                    // 从相册导入按钮
+                    _GalleryButton(
+                      isPicking: controller.isPicking.value,
+                      onTap: controller.pickFromGallery,
+                    ),
+                  ],
                 )),
           ),
         ],
@@ -342,6 +354,55 @@ class _CircleBtn extends StatelessWidget {
           border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Center(child: child),
+      ),
+    );
+  }
+}
+
+// ── 从相册导入按钮 ────────────────────────────────────────
+class _GalleryButton extends StatelessWidget {
+  const _GalleryButton({required this.isPicking, required this.onTap});
+  final bool isPicking;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isPicking ? null : onTap,
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        ),
+        child: Center(
+          child: isPicking
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.photo_library_outlined,
+                        color: Colors.white.withValues(alpha: 0.85), size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      '从相册选取照片',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
