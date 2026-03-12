@@ -17,23 +17,29 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── 图片预览区（支持缩放）────────────────────────
+          // ── 多图滑动预览 ─────────────────────────────────
           Obx(() {
-            final path = controller.imagePath.value;
-            if (path.isEmpty) {
+            if (controller.imagePaths.isEmpty) {
               return const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               );
             }
-            return InteractiveViewer(
-              minScale: 0.8,
-              maxScale: 5.0,
-              child: Center(
-                child: Image.file(
-                  File(path),
-                  fit: BoxFit.contain,
-                ),
-              ),
+            return PageView.builder(
+              controller: controller.pageController,
+              onPageChanged: controller.onPageChanged,
+              itemCount: controller.imagePaths.length,
+              itemBuilder: (context, index) {
+                return InteractiveViewer(
+                  minScale: 0.8,
+                  maxScale: 5.0,
+                  child: Center(
+                    child: Image.file(
+                      File(controller.imagePaths[index]),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                );
+              },
             );
           }),
 
@@ -52,7 +58,8 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.45),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25)),
                     ),
                     child: const Icon(
                       Icons.arrow_back_ios_new_rounded,
@@ -61,23 +68,55 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                     ),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   child: Center(
-                    child: Text(
-                      '照片预览',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-                      ),
-                    ),
+                    child: Obx(() {
+                      final total = controller.imagePaths.length;
+                      final cur = controller.currentIndex.value + 1;
+                      return Text(
+                        total > 1 ? '照片预览  $cur / $total' : '照片预览',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                        ),
+                      );
+                    }),
                   ),
                 ),
                 const SizedBox(width: 40),
               ],
             ),
           ),
+
+          // ── 页码指示器（多图时才显示）───────────────────
+          Obx(() {
+            if (controller.imagePaths.length <= 1) return const SizedBox.shrink();
+            return Positioned(
+              bottom: safeBottom + 118,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  controller.imagePaths.length,
+                  (i) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: controller.currentIndex.value == i ? 20 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: controller.currentIndex.value == i
+                          ? AppColors.accent
+                          : Colors.white.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
 
           // ── 底部操作栏 ───────────────────────────────────
           Positioned(
@@ -87,7 +126,6 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 提示文字
                 Text(
                   '确认病历照片清晰完整，再进行识别',
                   textAlign: TextAlign.center,
@@ -96,10 +134,10 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                     fontSize: 12,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 Row(
                   children: [
-                    // 重拍按钮
+                    // 重拍
                     Expanded(
                       child: GestureDetector(
                         onTap: controller.retake,
@@ -126,7 +164,7 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    // 一键识别按钮
+                    // 一键识别
                     Expanded(
                       flex: 2,
                       child: GestureDetector(
@@ -144,24 +182,28 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                               ),
                             ],
                           ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.auto_awesome_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                '一键识别',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                          child: Center(
+                            child: Obx(() {
+                              final count = controller.imagePaths.length;
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.auto_awesome_rounded,
+                                      color: Colors.white, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    count > 1
+                                        ? '一键识别（$count张）'
+                                        : '一键识别',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
                           ),
                         ),
                       ),
@@ -176,3 +218,5 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
     );
   }
 }
+
+

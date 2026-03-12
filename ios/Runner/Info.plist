@@ -4,6 +4,13 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>需要访问相机以拍摄病历照片</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要访问相册以导入病历照片</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>zh-Hans</string>
+		<string>en</string>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

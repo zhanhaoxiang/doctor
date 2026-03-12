@@ -1,4 +1,3 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
@@ -9,333 +8,168 @@ class CameraPage extends GetView<ScanCameraController> {
 
   @override
   Widget build(BuildContext context) {
-    final safeTop = MediaQuery.of(context).padding.top;
     final safeBottom = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF121212),
       body: Stack(
-        fit: StackFit.expand,
         children: [
-          // ── 相机预览 ─────────────────────────────────────
-          Obx(() {
-            if (controller.hasError.value) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.camera_alt_outlined, color: Colors.white54, size: 48),
-                    const SizedBox(height: 12),
-                    const Text(
-                      '无法访问相机',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '请在系统设置中开启相机权限',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
-                    ),
-                  ],
+          // ── 背景渐变 ─────────────────────────────────────
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF1A1A1A), Color(0xFF0D0D0D)],
                 ),
-              );
-            }
-            if (!controller.isInitialized.value) {
-              return const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              );
-            }
-            return CameraPreview(controller.cameraCtrl);
-          }),
-
-          // ── 引导遮罩（带镂空方框）────────────────────────
-          Obx(() {
-            if (!controller.isInitialized.value || controller.hasError.value) {
-              return const SizedBox.shrink();
-            }
-            return LayoutBuilder(builder: (context, constraints) {
-              return _GuideOverlay(size: constraints.biggest);
-            });
-          }),
-
-          // ── 顶部操作栏 ───────────────────────────────────
-          Positioned(
-            top: safeTop + 10,
-            left: 16,
-            right: 16,
-            child: _TopBar(controller: controller),
+              ),
+            ),
           ),
 
-          // ── 底部拍摄按钮 ─────────────────────────────────
-          Positioned(
-            bottom: safeBottom + 36,
-            left: 0,
-            right: 0,
-            child: _CaptureButton(controller: controller),
+          // ── 主体内容 ─────────────────────────────────────
+          Positioned.fill(
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // 顶部栏
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Row(
+                      children: [
+                        _CircleBtn(
+                          onTap: Get.back,
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: Colors.white,
+                            size: 17,
+                          ),
+                        ),
+                        const Expanded(
+                          child: Center(
+                            child: Text(
+                              '拍摄病历',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 40),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // 文档扫描示意图
+                  const _DocumentIllustration(),
+
+                  const SizedBox(height: 32),
+
+                  // 使用提示
+                  const _TipsList(),
+
+                  const Spacer(),
+                ],
+              ),
+            ),
           ),
 
-          // ── 处理中遮罩 ───────────────────────────────────
-          Obx(() {
-            if (!controller.isProcessing.value) return const SizedBox.shrink();
-            return _ProcessingOverlay(controller: controller);
-          }),
+          // ── 底部扫描按钮 ─────────────────────────────────
+          Positioned(
+            bottom: safeBottom + 32,
+            left: 24,
+            right: 24,
+            child: Obx(() => _ScanButton(
+                  isScanning: controller.isScanning.value,
+                  onTap: controller.startScan,
+                )),
+          ),
         ],
       ),
     );
   }
 }
 
-// ── 引导覆盖层 ──────────────────────────────────────────────
-class _GuideOverlay extends StatelessWidget {
-  const _GuideOverlay({required this.size});
-  final Size size;
-
-  @override
-  Widget build(BuildContext context) {
-    final guideW = size.width * 0.84;
-    final guideH = guideW * 1.42; // 接近 A4 纸比例
-    final guideL = (size.width - guideW) / 2;
-    final guideT = (size.height - guideH) / 2 - 24;
-    final guideRect = Rect.fromLTWH(guideL, guideT, guideW, guideH);
-
-    return Stack(
-      children: [
-        CustomPaint(
-          size: size,
-          painter: _OverlayPainter(guideRect: guideRect),
-        ),
-        // 上方引导文字
-        Positioned(
-          left: 0,
-          right: 0,
-          top: guideT - 70,
-          child: Column(
-            children: [
-              const Text(
-                '请将病历单对准框内',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  shadows: [Shadow(color: Colors.black54, blurRadius: 6)],
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '保持稳定，确保光线充足',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontSize: 13,
-                  shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
-                ),
-              ),
-            ],
-          ),
-        ),
-        // 下方提示文字
-        Positioned(
-          left: 0,
-          right: 0,
-          top: guideT + guideH + 16,
-          child: Text(
-            '系统将自动识别并裁剪纸质区域',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.55),
-              fontSize: 12,
-              shadows: const [Shadow(color: Colors.black45, blurRadius: 4)],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── 顶部栏 ────────────────────────────────────────────────
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.controller});
-  final ScanCameraController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _CircleBtn(
-          onTap: Get.back,
-          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
-        ),
-        const Expanded(
-          child: Center(
-            child: Text(
-              '拍摄病历',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-              ),
-            ),
-          ),
-        ),
-        Obx(() => _CircleBtn(
-              onTap: controller.toggleFlash,
-              filled: controller.isFlashOn.value,
-              child: Icon(
-                controller.isFlashOn.value ? Icons.flash_on_rounded : Icons.flash_off_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-            )),
-      ],
-    );
-  }
-}
-
-// ── 拍摄按钮 ──────────────────────────────────────────────
-class _CaptureButton extends StatelessWidget {
-  const _CaptureButton({required this.controller});
-  final ScanCameraController controller;
+// ── 文档扫描示意图 ─────────────────────────────────────────
+class _DocumentIllustration extends StatelessWidget {
+  const _DocumentIllustration();
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: GestureDetector(
-        onTap: controller.capturePhoto,
-        child: Container(
-          width: 76,
-          height: 76,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 4),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 12,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(4),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
+      child: SizedBox(
+        width: 220,
+        height: 220,
+        child: CustomPaint(
+          painter: _IllustrationPainter(),
         ),
       ),
     );
   }
 }
 
-// ── 处理中遮罩 ────────────────────────────────────────────
-class _ProcessingOverlay extends StatelessWidget {
-  const _ProcessingOverlay({required this.controller});
-  final ScanCameraController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.black.withValues(alpha: 0.78),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              width: 52,
-              height: 52,
-              child: CircularProgressIndicator(
-                color: AppColors.accent,
-                strokeWidth: 3,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Obx(() => Text(
-                  ScanCameraController.processingSteps[controller.processingStep.value],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                )),
-            const SizedBox(height: 8),
-            Text(
-              '请稍候...',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── 圆形按钮 ──────────────────────────────────────────────
-class _CircleBtn extends StatelessWidget {
-  const _CircleBtn({required this.onTap, required this.child, this.filled = false});
-  final VoidCallback onTap;
-  final Widget child;
-  final bool filled;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: filled ? Colors.amber : Colors.black.withValues(alpha: 0.35),
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-        ),
-        child: Center(child: child),
-      ),
-    );
-  }
-}
-
-// ── 自定义遮罩绘制器 ──────────────────────────────────────
-class _OverlayPainter extends CustomPainter {
-  const _OverlayPainter({required this.guideRect});
-  final Rect guideRect;
-
+class _IllustrationPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // 半透明遮罩（镂空矩形）
-    final maskPaint = Paint()..color = Colors.black.withValues(alpha: 0.52);
-    final maskPath = Path()
-      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..addRRect(RRect.fromRectAndRadius(guideRect, const Radius.circular(10)))
-      ..fillType = PathFillType.evenOdd;
-    canvas.drawPath(maskPath, maskPaint);
+    final cx = size.width / 2;
+    final cy = size.height / 2;
 
-    // 镂空边框细线
-    final borderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
+    // 外圆光晕
+    final glowPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          AppColors.accent.withValues(alpha: 0.18),
+          AppColors.accent.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: size.width / 2));
+    canvas.drawCircle(Offset(cx, cy), size.width / 2, glowPaint);
+
+    // 文档矩形（白色卡片）
+    const docW = 100.0;
+    const docH = 140.0;
+    final docRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(cx, cy), width: docW, height: docH),
+      const Radius.circular(8),
+    );
     canvas.drawRRect(
-      RRect.fromRectAndRadius(guideRect, const Radius.circular(10)),
-      borderPaint,
+      docRect,
+      Paint()..color = const Color(0xFF2A2A2A),
+    );
+    canvas.drawRRect(
+      docRect,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.12)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
     );
 
-    // 绿色角标
+    // 文档内模拟文字行
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.18)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    for (int i = 0; i < 6; i++) {
+      final y = cy - 40 + i * 14.0;
+      final w = (i == 2 || i == 5) ? 48.0 : 72.0;
+      canvas.drawLine(Offset(cx - w / 2, y), Offset(cx + w / 2, y), linePaint);
+    }
+
+    // 绿色扫描角标
     final cornerPaint = Paint()
       ..color = AppColors.accent
       ..strokeWidth = 3.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    const cLen = 26.0;
-    final l = guideRect.left;
-    final t = guideRect.top;
-    final r = guideRect.right;
-    final b = guideRect.bottom;
+    const pad = 8.0;
+    const cLen = 18.0;
+    final l = cx - docW / 2 - pad;
+    final t = cy - docH / 2 - pad;
+    final r = cx + docW / 2 + pad;
+    final b = cy + docH / 2 + pad;
 
     // 左上
     canvas.drawLine(Offset(l, t + cLen), Offset(l, t), cornerPaint);
@@ -352,6 +186,163 @@ class _OverlayPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _OverlayPainter oldDelegate) =>
-      oldDelegate.guideRect != guideRect;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── 使用提示列表 ──────────────────────────────────────────
+class _TipsList extends StatelessWidget {
+  const _TipsList();
+
+  static const _tips = [
+    (Icons.wb_sunny_outlined, '光线充足', '保持环境明亮，避免强反光或阴影'),
+    (Icons.crop_free_rounded, '完整对齐', '将病历单完整放入扫描框内'),
+    (Icons.straighten_rounded, '保持平整', '确保纸张平铺，减少折痕与弯曲'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Column(
+        children: _tips
+            .map((tip) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _TipRow(icon: tip.$1, title: tip.$2, desc: tip.$3),
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _TipRow extends StatelessWidget {
+  const _TipRow({required this.icon, required this.title, required this.desc});
+  final IconData icon;
+  final String title;
+  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: AppColors.accent.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppColors.accent, size: 18),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── 扫描按钮 ──────────────────────────────────────────────
+class _ScanButton extends StatelessWidget {
+  const _ScanButton({required this.isScanning, required this.onTap});
+  final bool isScanning;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isScanning ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 56,
+        decoration: BoxDecoration(
+          color: isScanning
+              ? AppColors.accent.withValues(alpha: 0.6)
+              : AppColors.accent,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: isScanning
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.accent.withValues(alpha: 0.45),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+        ),
+        child: Center(
+          child: isScanning
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+              : const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.document_scanner_outlined, color: Colors.white, size: 20),
+                    SizedBox(width: 10),
+                    Text(
+                      '开始扫描病历',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── 圆形按钮 ──────────────────────────────────────────────
+class _CircleBtn extends StatelessWidget {
+  const _CircleBtn({required this.onTap, required this.child});
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        ),
+        child: Center(child: child),
+      ),
+    );
+  }
 }
