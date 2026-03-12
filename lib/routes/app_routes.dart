@@ -18,4 +18,6 @@ abstract class AppRoutes {
   static const printPreview = '/print-preview';
   static const permissions = '/permissions';
   static const onboarding = '/onboarding';
+  static const camera = '/camera';
+  static const photoPreview = '/photo-preview';
 }

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../routes/app_routes.dart';
 
 class CaptureCard extends StatelessWidget {
   const CaptureCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => Get.toNamed(AppRoutes.camera),
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -84,6 +88,7 @@ class CaptureCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

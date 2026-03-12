@@ -37,6 +37,10 @@ import '../pages/permissions/permissions_binding.dart';
 import '../pages/permissions/permissions_page.dart';
 import '../pages/onboarding/onboarding_binding.dart';
 import '../pages/onboarding/onboarding_page.dart';
+import '../pages/camera/camera_binding.dart';
+import '../pages/camera/camera_page.dart';
+import '../pages/photo_preview/photo_preview_binding.dart';
+import '../pages/photo_preview/photo_preview_page.dart';
 import 'app_routes.dart';
 
 abstract class AppPages {
@@ -60,5 +64,7 @@ abstract class AppPages {
     GetPage(name: AppRoutes.printPreview, page: () => const PrintPreviewPage(), binding: PrintPreviewBinding()),
     GetPage(name: AppRoutes.permissions, page: () => const PermissionsPage(), binding: PermissionsBinding()),
     GetPage(name: AppRoutes.onboarding, page: () => const OnboardingPage(), binding: OnboardingBinding()),
+    GetPage(name: AppRoutes.camera, page: () => const CameraPage(), binding: CameraBinding()),
+    GetPage(name: AppRoutes.photoPreview, page: () => const PhotoPreviewPage(), binding: PhotoPreviewBinding()),
   ];
 }
