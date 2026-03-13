@@ -99,6 +99,18 @@ class EditController extends GetxController {
     ));
   }
 
+  // ── 历史记录（去重后的医院 / 科室列表）───────────────────
+  // 实际项目中应从本地数据库查询；这里用固定示例数据
+  static const historyHospitals = [
+    '北京协和医院', '北京儿童医院', '301 医院', '北京大学人民医院',
+    '北京朝阳医院', '社区卫生服务中心',
+  ];
+
+  static const historyDepartments = [
+    '呼吸内科', '儿科', '骨科', '消化内科', '心内科',
+    '皮肤科', '眼科', '耳鼻喉科', '神经内科', '急诊科',
+  ];
+
   // ── 选择就诊日期 ────────────────────────────────────────
   Future<void> pickDate(BuildContext context) async {
     final now = DateTime.now();
@@ -116,6 +128,7 @@ class EditController extends GetxController {
       initialDate: initial,
       firstDate: DateTime(2000),
       lastDate: now,
+      locale: const Locale('zh', 'CN'),
     );
     if (picked != null) {
       visitDateCtrl.text =

@@ -23,9 +23,10 @@ class BottomDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeIndex = _items.indexWhere((e) => e.tab == activeTab);
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
+      padding: EdgeInsets.fromLTRB(8, 10, 8, 10 + bottomPadding),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.96),
         borderRadius: const BorderRadius.only(
@@ -153,12 +154,12 @@ class _DockItem extends StatelessWidget {
         // Active dot indicator
         AnimatedContainer(
           duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutBack,
+          curve: Curves.easeOut,
           margin: const EdgeInsets.only(top: 4),
-          width: isActive ? 4 : 0,
-          height: isActive ? 4 : 0,
+          width: isActive ? 4.0 : 0.01,
+          height: isActive ? 4.0 : 0.01,
           decoration: BoxDecoration(
-            color: AppColors.accent,
+            color: isActive ? AppColors.accent : Colors.transparent,
             shape: BoxShape.circle,
           ),
         ),

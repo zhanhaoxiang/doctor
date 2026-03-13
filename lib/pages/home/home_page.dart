@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
+import '../../routes/app_routes.dart';
 import 'home_controller.dart';
 import 'widgets/capture_card.dart';
 import 'widgets/family_chips_bar.dart';
@@ -100,10 +101,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          _IconButton(
-            onTap: () => Get.snackbar('添加', '新建病历记录'),
-            child: const Icon(Icons.add_rounded, size: 18, color: AppColors.ink2),
-          ),
+          _AddMenuButton(),
         ],
       ),
     );
@@ -132,5 +130,88 @@ class _IconButton extends StatelessWidget {
     );
   }
 }
+
+class _AddMenuButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_AddAction>(
+      onSelected: (action) {
+        if (action == _AddAction.manual) {
+          Get.toNamed(AppRoutes.edit);
+        } else {
+          Get.toNamed(AppRoutes.camera);
+        }
+      },
+      offset: const Offset(0, 36),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 8,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
+      color: Colors.white,
+      itemBuilder: (_) => [
+        _menuItem(
+          action: _AddAction.manual,
+          icon: Icons.edit_note_rounded,
+          label: '手动录入',
+          color: AppColors.accent,
+        ),
+        _menuItem(
+          action: _AddAction.camera,
+          icon: Icons.document_scanner_rounded,
+          label: '拍照录入',
+          color: const Color(0xFF32ADE6),
+        ),
+      ],
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.line),
+        ),
+        child: const Center(
+          child: Icon(Icons.add_rounded, size: 18, color: AppColors.ink2),
+        ),
+      ),
+    );
+  }
+
+  PopupMenuItem<_AddAction> _menuItem({
+    required _AddAction action,
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return PopupMenuItem(
+      value: action,
+      height: 46,
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: color),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.ink1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _AddAction { manual, camera }
+
 
 

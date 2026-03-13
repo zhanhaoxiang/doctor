@@ -20,25 +20,15 @@ class MainPage extends GetView<MainController> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Obx(() => IndexedStack(
             index: controller.activeTab.value,
             children: _tabs,
           )),
-      bottomNavigationBar: Obx(() => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              BottomDock(
-                activeTab: DockTab.values[controller.activeTab.value],
-                onTabChanged: (tab) => controller.switchTab(tab.index),
-              ),
-              SizedBox(
-                height: bottomPadding,
-                child: const ColoredBox(color: Colors.white),
-              ),
-            ],
+      bottomNavigationBar: Obx(() => BottomDock(
+            activeTab: DockTab.values[controller.activeTab.value],
+            onTabChanged: (tab) => controller.switchTab(tab.index),
           )),
     );
   }

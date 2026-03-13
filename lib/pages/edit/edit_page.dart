@@ -96,16 +96,18 @@ class EditPage extends GetView<EditController> {
             onTap: () => controller.pickDate(context),
           ),
           _divider(),
-          _FieldRow(
+          _FieldRowWithHistory(
             label: '医院',
             controller: controller.hospitalCtrl,
-            hint: '请输入医院名称',
+            hint: '请输入或选择医院',
+            history: EditController.historyHospitals,
           ),
           _divider(),
-          _FieldRow(
+          _FieldRowWithHistory(
             label: '科室',
             controller: controller.departmentCtrl,
-            hint: '请输入科室名称',
+            hint: '请输入或选择科室',
+            history: EditController.historyDepartments,
           ),
           _divider(),
           _FieldRow(
@@ -133,12 +135,14 @@ class EditPage extends GetView<EditController> {
             label: 'AI 摘要',
             controller: controller.summaryCtrl,
             hint: '就诊情况摘要，可手动修改',
+            minLines: 3,
           ),
           _divider(),
           _MultiFieldRow(
             label: '医嘱',
             controller: controller.prescriptionCtrl,
             hint: '用药及注意事项',
+            minLines: 3,
           ),
         ],
       ),
@@ -341,10 +345,12 @@ class _MultiFieldRow extends StatelessWidget {
     required this.label,
     required this.controller,
     required this.hint,
+    this.minLines = 3,
   });
   final String label;
   final TextEditingController controller;
   final String hint;
+  final int minLines;
 
   @override
   Widget build(BuildContext context) {
@@ -358,6 +364,7 @@ class _MultiFieldRow extends StatelessWidget {
           const SizedBox(height: 6),
           TextField(
             controller: controller,
+            minLines: minLines,
             maxLines: null,
             keyboardType: TextInputType.multiline,
             style: const TextStyle(
@@ -377,6 +384,136 @@ class _MultiFieldRow extends StatelessWidget {
     );
   }
 }
+
+/// 可输入 + 右侧历史下拉按钮
+class _FieldRowWithHistory extends StatelessWidget {
+  const _FieldRowWithHistory({
+    required this.label,
+    required this.controller,
+    required this.hint,
+    required this.history,
+  });
+  final String label;
+  final TextEditingController controller;
+  final String hint;
+  final List<String> history;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 72,
+            child: Text(label,
+                style:
+                    const TextStyle(fontSize: 13, color: AppColors.ink3)),
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              style:
+                  const TextStyle(fontSize: 13, color: AppColors.ink1),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.ink3.withValues(alpha: 0.6)),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => _showHistory(context),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Icon(Icons.expand_more_rounded,
+                  size: 18, color: AppColors.ink3.withValues(alpha: 0.7)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHistory(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        final maxHeight = MediaQuery.of(context).size.height * 0.6;
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.line,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Text('选择$label',
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink1)),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: Get.back,
+                      child: const Icon(Icons.close_rounded,
+                          size: 20, color: AppColors.ink3),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: history
+                      .map((item) => ListTile(
+                            dense: true,
+                            title: Text(item,
+                                style: const TextStyle(
+                                    fontSize: 14, color: AppColors.ink1)),
+                            trailing: controller.text == item
+                                ? const Icon(Icons.check_rounded,
+                                    color: AppColors.accent, size: 18)
+                                : null,
+                            onTap: () {
+                              controller.text = item;
+                              Get.back();
+                            },
+                          ))
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 
 class _AttachmentTile extends StatelessWidget {
   const _AttachmentTile(
