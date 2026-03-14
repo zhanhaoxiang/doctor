@@ -10,7 +10,7 @@ class AppConstants {
   // ⚠️ 生产环境请将 API Key 移至安全配置（环境变量/后端代理）
   static const String arkApiKey = '6b561b29-fde8-4d2a-928c-068b2f016cd0';
   static const String arkEndpoint = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
-  static const String arkModel = 'doubao-seed-2-0-pro-260215';
+  static const String arkModel = 'doubao-seed-1-6-251015';
 
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 60);
