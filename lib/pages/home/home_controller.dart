@@ -1,4 +1,7 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../data/models/family_member.dart';
 import '../../data/models/medical_record.dart';
@@ -104,9 +107,7 @@ class HomeController extends GetxController {
     final idx = selectedMemberIndex.value;
     if (idx < 0) return records;
     final memberId = familyMembers[idx].id;
-    return records
-        .where((r) => r.familyMemberId == null || r.familyMemberId == memberId)
-        .toList();
+    return records.where((r) => r.familyMemberId == null || r.familyMemberId == memberId).toList();
   }
 
   /// 按月分组，返回有序列表
@@ -116,9 +117,7 @@ class HomeController extends GetxController {
     for (final r in filtered) {
       map.putIfAbsent(r.monthGroupKey, () => []).add(r);
     }
-    return map.entries
-        .map((e) => (label: e.key, records: e.value))
-        .toList();
+    return map.entries.map((e) => (label: e.key, records: e.value)).toList();
   }
 
   FamilyMember? memberById(String? id) {
@@ -130,9 +129,10 @@ class HomeController extends GetxController {
     }
   }
 
-  void selectMember(int index) {
-    selectedMemberIndex.value =
-        selectedMemberIndex.value == index ? -1 : index;
+  Future<void> selectMember(int index) async {
+    selectedMemberIndex.value = selectedMemberIndex.value == index ? -1 : index;
+    var dio = Dio();
+    var res = await dio.get('https://www.baidu.com');
+    debugPrint('Dio response status: ${res.statusCode}');
   }
 }
-

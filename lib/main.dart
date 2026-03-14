@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
+
 import 'core/theme/app_theme.dart';
 import 'core/translations/app_translations.dart';
 import 'routes/app_pages.dart';
@@ -9,6 +12,10 @@ import 'services/locale_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 提前预热 DNS，防止被插件重置
+  // try {
+  //   await InternetAddress.lookup('www.baidu.com');
+  // } catch (_) {}
   await _initServices();
   runApp(const MyApp());
 }
@@ -34,14 +41,10 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('zh', 'CN'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('zh', 'CN'), Locale('en', 'US')],
       initialRoute: AppRoutes.main,
       getPages: AppPages.routes,
       debugShowCheckedModeBanner: false,
     );
   }
 }
-

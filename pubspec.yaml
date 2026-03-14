@@ -35,13 +35,15 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   get: ^4.7.3
-  cunning_document_scanner: ^1.4.0
   path_provider: ^2.1.2
   image_picker: ^1.2.1
   http: ^1.6.0
   dio: ^5.9.2
   flutter_localizations:
     sdk: flutter
+  permission_handler: ^12.0.1
+  flutter_doc_scanner: ^0.0.18
+  cunning_document_scanner: ^1.4.0
 
 dev_dependencies:
   flutter_test:
