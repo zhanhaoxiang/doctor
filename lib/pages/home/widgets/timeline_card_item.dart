@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../core/theme/app_colors.dart';
-import '../../../data/models/medical_record.dart';
 import '../../../data/models/family_member.dart';
+import '../../../data/models/medical_record.dart';
 import '../../../routes/app_routes.dart';
 
 class TimelineCardItem extends StatelessWidget {
+  const TimelineCardItem({super.key, required this.record, this.member});
+
   final MedicalRecord record;
   final FamilyMember? member;
-
-  const TimelineCardItem({
-    super.key,
-    required this.record,
-    this.member,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +20,7 @@ class TimelineCardItem extends StatelessWidget {
       color: AppColors.card,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        onTap: () => Get.toNamed(AppRoutes.detail, arguments: record),
+        onTap: () => Get.toNamed(AppRoutes.detail, arguments: record.id),
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
@@ -42,16 +39,13 @@ class TimelineCardItem extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 左侧彩色边条
                 Container(width: 4, color: accentColor),
-                // 内容
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 医院名 + 日期
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -73,7 +67,6 @@ class TimelineCardItem extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 6),
-                        // AI 摘要
                         Text(
                           record.aiSummary,
                           style: const TextStyle(
@@ -83,7 +76,6 @@ class TimelineCardItem extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // 标签行
                         Wrap(
                           spacing: 6,
                           runSpacing: 4,
@@ -111,8 +103,9 @@ class TimelineCardItem extends StatelessWidget {
 }
 
 class _TagChip extends StatelessWidget {
-  final RecordTag tag;
   const _TagChip({required this.tag});
+
+  final RecordTag tag;
 
   @override
   Widget build(BuildContext context) {
@@ -135,11 +128,15 @@ class _TagChip extends StatelessWidget {
 }
 
 class _ColoredTagChip extends StatelessWidget {
+  const _ColoredTagChip({
+    required this.label,
+    required this.bgColor,
+    required this.textColor,
+  });
+
   final String label;
   final Color bgColor;
   final Color textColor;
-  const _ColoredTagChip(
-      {required this.label, required this.bgColor, required this.textColor});
 
   @override
   Widget build(BuildContext context) {
@@ -149,10 +146,7 @@ class _ColoredTagChip extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 11, color: textColor),
-      ),
+      child: Text(label, style: TextStyle(fontSize: 11, color: textColor)),
     );
   }
 }

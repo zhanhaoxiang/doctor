@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
+import '../../data/models/member_summary.dart';
 import 'family_controller.dart';
 
 class FamilyPage extends GetView<FamilyController> {
@@ -10,13 +12,15 @@ class FamilyPage extends GetView<FamilyController> {
   @override
   Widget build(BuildContext context) {
     return CommonPage(
-      title: '家庭成员',
+      title: '成员管理',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('添加', '添加家庭成员', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => _showMemberDialog(context),
         child: Container(
-          width: 32, height: 32,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppColors.line),
           ),
           child: const Icon(Icons.add_rounded, size: 18, color: AppColors.ink2),
@@ -25,69 +29,185 @@ class FamilyPage extends GetView<FamilyController> {
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (_, i) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _MemberCard(member: controller.members[i]),
-              ),
-              childCount: controller.members.length,
-            ),
-          ),
+          sliver: Obx(() {
+            if (controller.members.isEmpty) {
+              return const SliverToBoxAdapter(
+                child: _EmptyState(label: '暂无成员，点击右上角添加'),
+              );
+            }
+            return SliverList(
+              delegate: SliverChildBuilderDelegate((_, index) {
+                final member = controller.members[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _MemberCard(
+                    member: member,
+                    onTap: () => _showMemberDialog(context, member: member),
+                  ),
+                );
+              }, childCount: controller.members.length),
+            );
+          }),
         ),
       ],
+    );
+  }
+
+  Future<void> _showMemberDialog(
+    BuildContext context, {
+    MemberSummary? member,
+  }) async {
+    final textController = TextEditingController(
+      text: member?.member.name ?? '',
+    );
+    await Get.dialog(
+      AlertDialog(
+        title: Text(member == null ? '新增成员' : '修改成员名称'),
+        content: TextField(
+          controller: textController,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: '请输入成员名称'),
+        ),
+        actions: [
+          TextButton(onPressed: Get.back, child: const Text('取消')),
+          FilledButton(
+            onPressed: () async {
+              final name = textController.text.trim();
+              if (name.isEmpty) {
+                Get.snackbar(
+                  '提示',
+                  '成员名称不能为空',
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+                return;
+              }
+              try {
+                if (member == null) {
+                  await controller.addMember(name);
+                } else {
+                  await controller.renameMember(member.member.id, name);
+                }
+                Get.back();
+              } catch (error) {
+                Get.snackbar(
+                  '保存失败',
+                  '$error',
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+              }
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+      barrierDismissible: true,
     );
   }
 }
 
 class _MemberCard extends StatelessWidget {
-  const _MemberCard({required this.member});
-  final FamilyMemberData member;
+  const _MemberCard({required this.member, required this.onTap});
+
+  final MemberSummary member;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.line),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: member.member.accentColor,
+                child: Text(
+                  member.member.name.substring(0, 1),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      member.member.name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.ink1,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${member.records}条记录 · ${member.followups}次复诊',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.ink3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: member.member.tagBgColor,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  member.badge,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: member.member.tagTextColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: AppColors.ink3,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.label});
+
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line),
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: member.avatarColor,
-            child: Text(
-              member.name[0],
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(member.name,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.ink1)),
-                const SizedBox(height: 3),
-                Text('${member.records}条记录 · ${member.followups}次复诊',
-                    style: const TextStyle(fontSize: 12, color: AppColors.ink3)),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppColors.accentLight,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(member.badge,
-                style: const TextStyle(fontSize: 11, color: AppColors.accent)),
-          ),
-          const SizedBox(width: 6),
-          const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.ink3),
-        ],
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 13, color: AppColors.ink3),
       ),
     );
   }

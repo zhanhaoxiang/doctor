@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../routes/app_routes.dart';
 import 'home_controller.dart';
@@ -19,14 +20,11 @@ class HomePage extends GetView<HomeController> {
       backgroundColor: AppColors.bg,
       body: Column(
         children: [
-          // ── 固定 AppBar（含状态栏安全区）─────────────────
           Container(
             color: AppColors.bg,
             padding: EdgeInsets.only(top: topPadding),
             child: const _TopBar(),
           ),
-
-          // ── 可滚动内容区 ─────────────────────────────────
           Expanded(
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(
@@ -42,24 +40,34 @@ class HomePage extends GetView<HomeController> {
                       const SizedBox(height: 14),
                       const CaptureCard(),
                       const SizedBox(height: 14),
-                      Obx(() => ReminderBanner(
-                            appointment: controller.nextAppointment.value,
-                          )),
+                      Obx(() {
+                        final appointment = controller.nextAppointment.value;
+                        if (appointment == null) {
+                          return const SizedBox.shrink();
+                        }
+                        return ReminderBanner(appointment: appointment);
+                      }),
                       const SizedBox(height: 14),
                     ]),
                   ),
                 ),
-                // 时间线分组（响应筛选变化）
                 Obx(() {
                   final groups = controller.groupedRecords;
+                  if (groups.isEmpty) {
+                    return const SliverPadding(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      sliver: SliverToBoxAdapter(child: _EmptyTimelineCard()),
+                    );
+                  }
                   return SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     sliver: SliverList.separated(
                       itemCount: groups.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 14),
-                      itemBuilder: (_, i) => TimelineSection(
-                        monthLabel: groups[i].label,
-                        records: groups[i].records,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 14),
+                      itemBuilder: (_, index) => TimelineSection(
+                        monthLabel: groups[index].label,
+                        records: groups[index].records,
                         memberById: controller.memberById,
                       ),
                     ),
@@ -68,8 +76,6 @@ class HomePage extends GetView<HomeController> {
               ],
             ),
           ),
-
-
         ],
       ),
     );
@@ -87,7 +93,11 @@ class _TopBar extends StatelessWidget {
         children: [
           _IconButton(
             onTap: () {},
-            child: const Icon(Icons.menu_rounded, size: 16, color: AppColors.ink2),
+            child: const Icon(
+              Icons.menu_rounded,
+              size: 16,
+              color: AppColors.ink2,
+            ),
           ),
           const Expanded(
             child: Center(
@@ -109,9 +119,10 @@ class _TopBar extends StatelessWidget {
 }
 
 class _IconButton extends StatelessWidget {
+  const _IconButton({required this.child, required this.onTap});
+
   final Widget child;
   final VoidCallback onTap;
-  const _IconButton({required this.child, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +222,24 @@ class _AddMenuButton extends StatelessWidget {
   }
 }
 
+class _EmptyTimelineCard extends StatelessWidget {
+  const _EmptyTimelineCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: const Text(
+        '还没有病历记录，点击右上角开始录入。',
+        style: TextStyle(fontSize: 13, color: AppColors.ink3),
+      ),
+    );
+  }
+}
+
 enum _AddAction { manual, camera }
-
-
-

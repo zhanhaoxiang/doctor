@@ -1,47 +1,33 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../core/theme/app_colors.dart';
+import 'dart:async';
 
-class FamilyMemberData {
-  const FamilyMemberData({
-    required this.name,
-    required this.records,
-    required this.followups,
-    required this.badge,
-    required this.avatarColor,
-    required this.tagBg,
-    required this.tagText,
-  });
-  final String name;
-  final int records;
-  final int followups;
-  final String badge;
-  final Color avatarColor;
-  final Color tagBg;
-  final Color tagText;
-}
+import 'package:get/get.dart';
+
+import '../../data/models/member_summary.dart';
+import '../../data/repositories/local_data_repository.dart';
 
 class FamilyController extends GetxController {
-  final members = const [
-    FamilyMemberData(
-      name: '妈妈', records: 3, followups: 1, badge: '本机成员',
-      avatarColor: AppColors.memberOrange,
-      tagBg: AppColors.tagMomBg, tagText: AppColors.tagMomText,
-    ),
-    FamilyMemberData(
-      name: '爸爸', records: 4, followups: 2, badge: '心内科',
-      avatarColor: AppColors.memberBlue,
-      tagBg: AppColors.tagDadBg, tagText: AppColors.tagDadText,
-    ),
-    FamilyMemberData(
-      name: '大宝', records: 2, followups: 0, badge: '儿科',
-      avatarColor: AppColors.memberPurple,
-      tagBg: AppColors.tagChild1Bg, tagText: AppColors.tagChild1Text,
-    ),
-    FamilyMemberData(
-      name: '二宝', records: 1, followups: 0, badge: '本机成员',
-      avatarColor: AppColors.accent,
-      tagBg: AppColors.tagChild2Bg, tagText: AppColors.tagChild2Text,
-    ),
-  ];
+  FamilyController() : _repository = Get.find<LocalDataRepository>();
+
+  final LocalDataRepository _repository;
+  final members = <MemberSummary>[].obs;
+  StreamSubscription<List<MemberSummary>>? _subscription;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _subscription = _repository.watchMemberSummaries().listen(
+      members.assignAll,
+    );
+  }
+
+  Future<void> addMember(String name) => _repository.addMember(name);
+
+  Future<void> renameMember(String id, String name) =>
+      _repository.renameMember(id, name);
+
+  @override
+  void onClose() {
+    _subscription?.cancel();
+    super.onClose();
+  }
 }

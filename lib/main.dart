@@ -1,27 +1,23 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/translations/app_translations.dart';
+import 'data/repositories/local_data_repository.dart';
 import 'routes/app_pages.dart';
 import 'routes/app_routes.dart';
 import 'services/locale_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // 提前预热 DNS，防止被插件重置
-  // try {
-  //   await InternetAddress.lookup('www.baidu.com');
-  // } catch (_) {}
   await _initServices();
   runApp(const MyApp());
 }
 
 Future<void> _initServices() async {
   await Get.putAsync(() async => LocaleService());
+  await Get.putAsync(() async => LocalDataRepository().init());
 }
 
 class MyApp extends StatelessWidget {

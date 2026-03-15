@@ -1,6 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
 import '../../data/models/record_attachment.dart';
@@ -42,13 +44,12 @@ class EditPage extends GetView<EditController> {
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-          sliver: SliverToBoxAdapter(child: _buildAttachmentsCard(context)),
+          sliver: SliverToBoxAdapter(child: _buildAttachmentsCard()),
         ),
       ],
     );
   }
 
-  // ── 成员选择行 ─────────────────────────────────────────
   Widget _buildMemberRow(BuildContext context) {
     return _CardContainer(
       child: GestureDetector(
@@ -60,20 +61,28 @@ class EditPage extends GetView<EditController> {
             children: [
               const SizedBox(
                 width: 72,
-                child: Text('就诊成员',
-                    style: TextStyle(fontSize: 13, color: AppColors.ink3)),
+                child: Text(
+                  '就诊成员',
+                  style: TextStyle(fontSize: 13, color: AppColors.ink3),
+                ),
               ),
               Expanded(
-                child: Obx(() => Text(
-                      controller.selectedMember.value,
-                      style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.ink1,
-                          fontWeight: FontWeight.w500),
-                    )),
+                child: Obx(
+                  () => Text(
+                    controller.selectedMemberLabel,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.ink1,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ),
-              const Icon(Icons.chevron_right_rounded,
-                  size: 16, color: AppColors.ink3),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: AppColors.ink3,
+              ),
             ],
           ),
         ),
@@ -81,7 +90,6 @@ class EditPage extends GetView<EditController> {
     );
   }
 
-  // ── 基本信息卡片（可编辑） ───────────────────────────────
   Widget _buildBasicCard(BuildContext context) {
     return _CardContainer(
       child: Column(
@@ -91,23 +99,30 @@ class EditPage extends GetView<EditController> {
             controller: controller.visitDateCtrl,
             hint: '请输入或选择日期',
             readOnly: true,
-            suffix: const Icon(Icons.calendar_today_rounded,
-                size: 14, color: AppColors.ink3),
+            suffix: const Icon(
+              Icons.calendar_today_rounded,
+              size: 14,
+              color: AppColors.ink3,
+            ),
             onTap: () => controller.pickDate(context),
           ),
           _divider(),
-          _FieldRowWithHistory(
-            label: '医院',
-            controller: controller.hospitalCtrl,
-            hint: '请输入或选择医院',
-            history: EditController.historyHospitals,
+          Obx(
+            () => _FieldRowWithHistory(
+              label: '医院',
+              controller: controller.hospitalCtrl,
+              hint: '请输入或选择医院',
+              history: controller.historyHospitals.toList(),
+            ),
           ),
           _divider(),
-          _FieldRowWithHistory(
-            label: '科室',
-            controller: controller.departmentCtrl,
-            hint: '请输入或选择科室',
-            history: EditController.historyDepartments,
+          Obx(
+            () => _FieldRowWithHistory(
+              label: '科室',
+              controller: controller.departmentCtrl,
+              hint: '请输入或选择科室',
+              history: controller.historyDepartments.toList(),
+            ),
           ),
           _divider(),
           _FieldRow(
@@ -126,7 +141,6 @@ class EditPage extends GetView<EditController> {
     );
   }
 
-  // ── AI 摘要 + 医嘱（可编辑多行） ───────────────────────
   Widget _buildAiCard() {
     return _CardContainer(
       child: Column(
@@ -149,8 +163,7 @@ class EditPage extends GetView<EditController> {
     );
   }
 
-  // ── 附件区 ─────────────────────────────────────────────
-  Widget _buildAttachmentsCard(BuildContext context) {
+  Widget _buildAttachmentsCard() {
     return _CardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,9 +173,10 @@ class EditPage extends GetView<EditController> {
             child: Text(
               '附件',
               style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.ink3,
-                  fontWeight: FontWeight.w500),
+                fontSize: 13,
+                color: AppColors.ink3,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           Obx(() {
@@ -173,8 +187,9 @@ class EditPage extends GetView<EditController> {
                 child: Text(
                   '暂无附件',
                   style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.ink3.withValues(alpha: 0.6)),
+                    fontSize: 13,
+                    color: AppColors.ink3.withValues(alpha: 0.6),
+                  ),
                 ),
               );
             }
@@ -184,17 +199,18 @@ class EditPage extends GetView<EditController> {
                 spacing: 10,
                 runSpacing: 10,
                 children: items
-                    .map((a) => _AttachmentTile(
-                          attachment: a,
-                          onRemove: () =>
-                              controller.removeAttachment(a.id),
-                        ))
+                    .map(
+                      (attachment) => _AttachmentTile(
+                        attachment: attachment,
+                        onRemove: () =>
+                            controller.removeAttachment(attachment.id),
+                      ),
+                    )
                     .toList(),
               ),
             );
           }),
           _divider(),
-          // 添加按钮行
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
@@ -218,59 +234,69 @@ class EditPage extends GetView<EditController> {
     );
   }
 
-  Widget _divider() =>
-      const Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14);
+  Widget _divider() => const Divider(
+    height: 1,
+    color: AppColors.line,
+    indent: 14,
+    endIndent: 14,
+  );
 
   void _showMemberPicker(BuildContext context) {
-    final members = ['妈妈', '爸爸', '大宝', '小宝'];
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.line,
-              borderRadius: BorderRadius.circular(2),
+      builder: (_) => Obx(
+        () => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.line,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text('选择就诊成员',
+            const SizedBox(height: 16),
+            const Text(
+              '选择就诊成员',
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.ink1)),
-          const SizedBox(height: 8),
-          ...members.map((m) => ListTile(
-                title:
-                    Text(m, style: const TextStyle(color: AppColors.ink1)),
-                trailing: Obx(() => controller.selectedMember.value == m
-                    ? const Icon(Icons.check_rounded,
-                        color: AppColors.accent)
-                    : const SizedBox.shrink()),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.ink1,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...controller.members.map(
+              (member) => ListTile(
+                title: Text(
+                  member.name,
+                  style: const TextStyle(color: AppColors.ink1),
+                ),
+                trailing: controller.selectedMemberId.value == member.id
+                    ? const Icon(Icons.check_rounded, color: AppColors.accent)
+                    : const SizedBox.shrink(),
                 onTap: () {
-                  controller.selectedMember.value = m;
+                  controller.selectedMemberId.value = member.id;
                   Get.back();
                 },
-              )),
-          const SizedBox(height: 16),
-        ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── 可复用组件 ──────────────────────────────────────────────
-
 class _CardContainer extends StatelessWidget {
   const _CardContainer({required this.child});
+
   final Widget child;
 
   @override
@@ -295,6 +321,7 @@ class _FieldRow extends StatelessWidget {
     this.suffix,
     this.onTap,
   });
+
   final String label;
   final TextEditingController controller;
   final String hint;
@@ -310,9 +337,10 @@ class _FieldRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 72,
-            child: Text(label,
-                style:
-                    const TextStyle(fontSize: 13, color: AppColors.ink3)),
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+            ),
           ),
           Expanded(
             child: TextField(
@@ -323,14 +351,17 @@ class _FieldRow extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.ink3.withValues(alpha: 0.6)),
+                  fontSize: 13,
+                  color: AppColors.ink3.withValues(alpha: 0.6),
+                ),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 suffixIcon: suffix,
-                suffixIconConstraints:
-                    const BoxConstraints(maxHeight: 32, maxWidth: 32),
+                suffixIconConstraints: const BoxConstraints(
+                  maxHeight: 32,
+                  maxWidth: 32,
+                ),
               ),
             ),
           ),
@@ -347,6 +378,7 @@ class _MultiFieldRow extends StatelessWidget {
     required this.hint,
     this.minLines = 3,
   });
+
   final String label;
   final TextEditingController controller;
   final String hint;
@@ -359,8 +391,10 @@ class _MultiFieldRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(fontSize: 13, color: AppColors.ink3)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+          ),
           const SizedBox(height: 6),
           TextField(
             controller: controller,
@@ -368,12 +402,16 @@ class _MultiFieldRow extends StatelessWidget {
             maxLines: null,
             keyboardType: TextInputType.multiline,
             style: const TextStyle(
-                fontSize: 13, color: AppColors.ink1, height: 1.6),
+              fontSize: 13,
+              color: AppColors.ink1,
+              height: 1.6,
+            ),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.ink3.withValues(alpha: 0.6)),
+                fontSize: 13,
+                color: AppColors.ink3.withValues(alpha: 0.6),
+              ),
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.zero,
@@ -385,7 +423,6 @@ class _MultiFieldRow extends StatelessWidget {
   }
 }
 
-/// 可输入 + 右侧历史下拉按钮
 class _FieldRowWithHistory extends StatelessWidget {
   const _FieldRowWithHistory({
     required this.label,
@@ -393,6 +430,7 @@ class _FieldRowWithHistory extends StatelessWidget {
     required this.hint,
     required this.history,
   });
+
   final String label;
   final TextEditingController controller;
   final String hint;
@@ -406,33 +444,36 @@ class _FieldRowWithHistory extends StatelessWidget {
         children: [
           SizedBox(
             width: 72,
-            child: Text(label,
-                style:
-                    const TextStyle(fontSize: 13, color: AppColors.ink3)),
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+            ),
           ),
           Expanded(
             child: TextField(
               controller: controller,
-              style:
-                  const TextStyle(fontSize: 13, color: AppColors.ink1),
+              style: const TextStyle(fontSize: 13, color: AppColors.ink1),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.ink3.withValues(alpha: 0.6)),
+                  fontSize: 13,
+                  color: AppColors.ink3.withValues(alpha: 0.6),
+                ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
           GestureDetector(
-            onTap: () => _showHistory(context),
+            onTap: history.isEmpty ? null : () => _showHistory(context),
             child: Padding(
               padding: const EdgeInsets.only(left: 4),
-              child: Icon(Icons.expand_more_rounded,
-                  size: 18, color: AppColors.ink3.withValues(alpha: 0.7)),
+              child: Icon(
+                Icons.expand_more_rounded,
+                size: 18,
+                color: AppColors.ink3.withValues(alpha: 0.7),
+              ),
             ),
           ),
         ],
@@ -469,16 +510,22 @@ class _FieldRowWithHistory extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Text('选择$label',
-                        style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.ink1)),
+                    Text(
+                      '选择$label',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink1,
+                      ),
+                    ),
                     const Spacer(),
                     GestureDetector(
                       onTap: Get.back,
-                      child: const Icon(Icons.close_rounded,
-                          size: 20, color: AppColors.ink3),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: AppColors.ink3,
+                      ),
                     ),
                   ],
                 ),
@@ -488,20 +535,29 @@ class _FieldRowWithHistory extends StatelessWidget {
                 child: ListView(
                   shrinkWrap: true,
                   children: history
-                      .map((item) => ListTile(
-                            dense: true,
-                            title: Text(item,
-                                style: const TextStyle(
-                                    fontSize: 14, color: AppColors.ink1)),
-                            trailing: controller.text == item
-                                ? const Icon(Icons.check_rounded,
-                                    color: AppColors.accent, size: 18)
-                                : null,
-                            onTap: () {
-                              controller.text = item;
-                              Get.back();
-                            },
-                          ))
+                      .map(
+                        (item) => ListTile(
+                          dense: true,
+                          title: Text(
+                            item,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.ink1,
+                            ),
+                          ),
+                          trailing: controller.text == item
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  color: AppColors.accent,
+                                  size: 18,
+                                )
+                              : null,
+                          onTap: () {
+                            controller.text = item;
+                            Get.back();
+                          },
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -514,10 +570,9 @@ class _FieldRowWithHistory extends StatelessWidget {
   }
 }
 
-
 class _AttachmentTile extends StatelessWidget {
-  const _AttachmentTile(
-      {required this.attachment, required this.onRemove});
+  const _AttachmentTile({required this.attachment, required this.onRemove});
+
   final RecordAttachment attachment;
   final VoidCallback onRemove;
 
@@ -550,12 +605,15 @@ class _AttachmentTile extends StatelessWidget {
                   child: Container(
                     width: 20,
                     height: 20,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.black54,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close_rounded,
-                        size: 12, color: Colors.white),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 12,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -573,24 +631,28 @@ class _AttachmentTile extends StatelessWidget {
     );
   }
 
-  Widget _iconFallback(RecordAttachment a) {
+  Widget _iconFallback(RecordAttachment attachment) {
     return Container(
       width: 80,
       height: 80,
       decoration: BoxDecoration(
-        color: a.iconColor.withValues(alpha: 0.1),
+        color: attachment.iconColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
-        child: Icon(a.icon, color: a.iconColor, size: 32),
+        child: Icon(attachment.icon, color: attachment.iconColor, size: 32),
       ),
     );
   }
 }
 
 class _AddButton extends StatelessWidget {
-  const _AddButton(
-      {required this.icon, required this.label, required this.onTap});
+  const _AddButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
   final IconData icon;
   final String label;
   final VoidCallback onTap;
@@ -614,9 +676,10 @@ class _AddButton extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w500),
+                fontSize: 12,
+                color: AppColors.accent,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),

@@ -1,27 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
+import '../../data/models/medical_record.dart';
+import 'tags_controller.dart';
 
-class TagsPage extends StatelessWidget {
+class TagsPage extends GetView<TagsController> {
   const TagsPage({super.key});
-
-  static const _tags = [
-    '#妈妈', '#爸爸', '#大宝', '#二宝',
-    '#门诊', '#复诊', '#影像', '#体检',
-    '#呼吸内科', '#心内科', '#儿科', '#全科',
-  ];
 
   @override
   Widget build(BuildContext context) {
     return CommonPage(
       title: '标签管理',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('添加', '添加新标签', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => _showTagDialog(context),
         child: Container(
-          width: 32, height: 32,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppColors.line),
           ),
           child: const Icon(Icons.add_rounded, size: 18, color: AppColors.ink2),
@@ -31,41 +30,128 @@ class TagsPage extends StatelessWidget {
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.line),
-              ),
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: _tags.map((tag) => _TagChip(label: tag)).toList(),
-              ),
-            ),
+            child: Obx(() {
+              if (controller.tags.isEmpty) {
+                return const _TagContainer(
+                  child: Text(
+                    '暂无标签，点击右上角添加',
+                    style: TextStyle(fontSize: 13, color: AppColors.ink3),
+                  ),
+                );
+              }
+              return _TagContainer(
+                child: Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: controller.tags
+                      .map(
+                        (tag) => _TagChip(
+                          tag: tag,
+                          onTap: () => _showTagDialog(context, tag: tag),
+                        ),
+                      )
+                      .toList(),
+                ),
+              );
+            }),
           ),
         ),
       ],
     );
   }
+
+  Future<void> _showTagDialog(BuildContext context, {RecordTag? tag}) async {
+    final textController = TextEditingController(text: tag?.label ?? '');
+    await Get.dialog(
+      AlertDialog(
+        title: Text(tag == null ? '新增标签' : '修改标签'),
+        content: TextField(
+          controller: textController,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: '例如：#呼吸内科'),
+        ),
+        actions: [
+          TextButton(onPressed: Get.back, child: const Text('取消')),
+          FilledButton(
+            onPressed: () async {
+              final label = textController.text.trim();
+              if (label.isEmpty) {
+                Get.snackbar(
+                  '提示',
+                  '标签不能为空',
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+                return;
+              }
+              try {
+                if (tag == null) {
+                  await controller.addTag(label);
+                } else {
+                  await controller.renameTag(tag.label, label);
+                }
+                Get.back();
+              } catch (error) {
+                Get.snackbar(
+                  '保存失败',
+                  '$error',
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+              }
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _TagChip extends StatelessWidget {
-  const _TagChip({required this.label});
-  final String label;
+class _TagContainer extends StatelessWidget {
+  const _TagContainer({required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.line),
       ),
-      child: Text(label,
-          style: const TextStyle(fontSize: 12, color: AppColors.ink2)),
+      child: child,
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  const _TagChip({required this.tag, required this.onTap});
+
+  final RecordTag tag;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasCustomStyle =
+        tag.bgColorValue != null && tag.textColorValue != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: hasCustomStyle ? Color(tag.bgColorValue!) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.line),
+        ),
+        child: Text(
+          tag.label,
+          style: TextStyle(
+            fontSize: 12,
+            color: hasCustomStyle ? Color(tag.textColorValue!) : AppColors.ink2,
+          ),
+        ),
+      ),
     );
   }
 }

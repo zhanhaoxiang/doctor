@@ -59,7 +59,8 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                       color: Colors.black.withValues(alpha: 0.45),
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25)),
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: const Icon(
                       Icons.arrow_back_ios_new_rounded,
@@ -79,7 +80,9 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                           color: Colors.white,
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
-                          shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                          shadows: [
+                            Shadow(color: Colors.black54, blurRadius: 4),
+                          ],
                         ),
                       );
                     }),
@@ -92,7 +95,9 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
 
           // ── 页码指示器（多图时才显示）───────────────────
           Obx(() {
-            if (controller.imagePaths.length <= 1) return const SizedBox.shrink();
+            if (controller.imagePaths.length <= 1) {
+              return const SizedBox.shrink();
+            }
             return Positioned(
               bottom: safeBottom + 118,
               left: 0,
@@ -170,7 +175,9 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                       child: Obx(() {
                         final recognizing = controller.isRecognizing.value;
                         return GestureDetector(
-                          onTap: recognizing ? null : controller.startRecognition,
+                          onTap: recognizing
+                              ? null
+                              : controller.startRecognition,
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             height: 52,
@@ -183,8 +190,9 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                                   ? null
                                   : [
                                       BoxShadow(
-                                        color: AppColors.accent
-                                            .withValues(alpha: 0.45),
+                                        color: AppColors.accent.withValues(
+                                          alpha: 0.45,
+                                        ),
                                         blurRadius: 18,
                                         offset: const Offset(0, 6),
                                       ),
@@ -207,9 +215,10 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Icon(
-                                              Icons.auto_awesome_rounded,
-                                              color: Colors.white,
-                                              size: 18),
+                                            Icons.auto_awesome_rounded,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
                                           const SizedBox(width: 8),
                                           Text(
                                             count > 1
@@ -288,4 +297,3 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
     );
   }
 }
-

@@ -1,14 +1,11 @@
+import 'record_attachment.dart';
+
 class RecordTag {
   final String label;
-  // null 表示使用默认样式
   final int? bgColorValue;
   final int? textColorValue;
 
-  const RecordTag(
-    this.label, {
-    this.bgColorValue,
-    this.textColorValue,
-  });
+  const RecordTag(this.label, {this.bgColorValue, this.textColorValue});
 }
 
 class MedicalRecord {
@@ -17,8 +14,14 @@ class MedicalRecord {
   final DateTime visitDate;
   final String aiSummary;
   final List<RecordTag> tags;
-  /// null 表示属于全家人
   final String? familyMemberId;
+  final String? department;
+  final String? doctorName;
+  final String? complaint;
+  final String? diagnosis;
+  final String doctorOrder;
+  final String source;
+  final List<RecordAttachment> attachments;
 
   const MedicalRecord({
     required this.id,
@@ -27,13 +30,17 @@ class MedicalRecord {
     required this.aiSummary,
     required this.tags,
     this.familyMemberId,
+    this.department,
+    this.doctorName,
+    this.complaint,
+    this.diagnosis,
+    this.doctorOrder = '',
+    this.source = '手动录入',
+    this.attachments = const [],
   });
 
-  /// 用于分组的 key，格式：yyyy 年 M 月
-  String get monthGroupKey =>
-      '${visitDate.year} 年 ${visitDate.month} 月';
+  String get monthGroupKey => '${visitDate.year} 年 ${visitDate.month} 月';
 
-  /// 显示日期，格式：MM-dd HH:mm
   String get formattedDate {
     final m = visitDate.month.toString().padLeft(2, '0');
     final d = visitDate.day.toString().padLeft(2, '0');

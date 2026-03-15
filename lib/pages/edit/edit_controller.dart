@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../data/models/recognition_result.dart';
+
+import '../../data/models/family_member.dart';
 import '../../data/models/record_attachment.dart';
+import '../../data/models/recognition_result.dart';
+import '../../data/repositories/local_data_repository.dart';
 
 class EditController extends GetxController {
-  // ── 表单字段控制器 ──────────────────────────────────────
+  EditController() : _repository = Get.find<LocalDataRepository>();
+
+  final LocalDataRepository _repository;
+
   final hospitalCtrl = TextEditingController();
   final departmentCtrl = TextEditingController();
   final doctorCtrl = TextEditingController();
@@ -14,27 +20,68 @@ class EditController extends GetxController {
   final prescriptionCtrl = TextEditingController();
   final summaryCtrl = TextEditingController();
 
-  // ── 响应式状态 ──────────────────────────────────────────
   final attachments = <RecordAttachment>[].obs;
-  final selectedMember = '妈妈'.obs;
+  final members = <FamilyMember>[].obs;
+  final historyHospitals = <String>[].obs;
+  final historyDepartments = <String>[].obs;
+  final selectedMemberId = RxnString();
   final isSaving = false.obs;
 
   final _picker = ImagePicker();
+  String? _editingRecordId;
+
+  String get selectedMemberLabel {
+    final memberId = selectedMemberId.value;
+    for (final member in members) {
+      if (member.id == memberId) return member.name;
+    }
+    return '请选择成员';
+  }
 
   @override
   void onInit() {
     super.onInit();
+    _loadInitialData();
     final args = Get.arguments;
     if (args is Map<String, dynamic>) {
       _fillFromRecognition(
         args['result'] as RecognitionResult?,
         args['imagePaths'] as List<String>?,
       );
+    } else if (args is String) {
+      _editingRecordId = args;
+      _loadExistingRecord(args);
     }
   }
 
+  Future<void> _loadInitialData() async {
+    members.assignAll(await _repository.loadMembers());
+    historyHospitals.assignAll(await _repository.loadHospitalHistory());
+    historyDepartments.assignAll(await _repository.loadDepartmentHistory());
+    if (selectedMemberId.value == null && members.isNotEmpty) {
+      selectedMemberId.value = members.first.id;
+    }
+  }
+
+  Future<void> _loadExistingRecord(String id) async {
+    final record = await _repository.getMedicalRecord(id);
+    if (record == null) return;
+    hospitalCtrl.text = record.hospitalName;
+    departmentCtrl.text = record.department ?? '';
+    doctorCtrl.text = record.doctorName ?? '';
+    visitDateCtrl.text =
+        '${record.visitDate.year}-${record.visitDate.month.toString().padLeft(2, '0')}-${record.visitDate.day.toString().padLeft(2, '0')}';
+    diagnosisCtrl.text = record.diagnosis ?? '';
+    prescriptionCtrl.text = record.doctorOrder;
+    summaryCtrl.text = record.aiSummary;
+    attachments.assignAll(record.attachments);
+    selectedMemberId.value = record.familyMemberId;
+  }
+
   void _fillFromRecognition(
-      RecognitionResult? result, List<String>? imagePaths) {
+    RecognitionResult? result,
+    List<String>? imagePaths,
+  ) {
     if (result != null && !result.isEmpty) {
       hospitalCtrl.text = result.hospital;
       departmentCtrl.text = result.department;
@@ -48,15 +95,17 @@ class EditController extends GetxController {
     if (imagePaths != null) {
       final now = DateTime.now();
       attachments.addAll(
-        imagePaths.asMap().entries.map((e) {
-          final type = RecordAttachment.typeFromPath(e.value,
-              defaultType: AttachmentType.medicalPhoto);
+        imagePaths.asMap().entries.map((entry) {
+          final type = RecordAttachment.typeFromPath(
+            entry.value,
+            defaultType: AttachmentType.medicalPhoto,
+          );
           return RecordAttachment(
-            id: 'img_${now.millisecondsSinceEpoch}_${e.key}',
-            path: e.value,
+            id: 'img_${now.millisecondsSinceEpoch}_${entry.key}',
+            path: entry.value,
             name: type == AttachmentType.pdf
-                ? '文档 ${e.key + 1}.pdf'
-                : '病历照片 ${e.key + 1}',
+                ? '文档 ${entry.key + 1}.pdf'
+                : '病历照片 ${entry.key + 1}',
             type: type,
             addedAt: now,
           );
@@ -65,7 +114,6 @@ class EditController extends GetxController {
     }
   }
 
-  // ── 添加附件：相机扫描 ──────────────────────────────────
   Future<void> addPhotoFromCamera() async {
     final image = await _picker.pickImage(
       source: ImageSource.camera,
@@ -75,43 +123,30 @@ class EditController extends GetxController {
     _addImageAttachment(image.path, AttachmentType.medicalPhoto);
   }
 
-  // ── 添加附件：相册 ──────────────────────────────────────
   Future<void> addPhotoFromGallery() async {
     final images = await _picker.pickMultiImage(imageQuality: 92);
-    for (final img in images) {
-      _addImageAttachment(img.path, AttachmentType.reportPhoto);
+    for (final image in images) {
+      _addImageAttachment(image.path, AttachmentType.reportPhoto);
     }
   }
 
-  // ── 删除附件 ────────────────────────────────────────────
   void removeAttachment(String id) {
-    attachments.removeWhere((a) => a.id == id);
+    attachments.removeWhere((attachment) => attachment.id == id);
   }
 
   void _addImageAttachment(String path, AttachmentType type) {
     final now = DateTime.now();
-    attachments.add(RecordAttachment(
-      id: 'att_${now.millisecondsSinceEpoch}',
-      path: path,
-      name: type == AttachmentType.reportPhoto ? '检查单照片' : '病历照片',
-      type: type,
-      addedAt: now,
-    ));
+    attachments.add(
+      RecordAttachment(
+        id: 'att_${now.microsecondsSinceEpoch}',
+        path: path,
+        name: type == AttachmentType.reportPhoto ? '检查单照片' : '病历照片',
+        type: type,
+        addedAt: now,
+      ),
+    );
   }
 
-  // ── 历史记录（去重后的医院 / 科室列表）───────────────────
-  // 实际项目中应从本地数据库查询；这里用固定示例数据
-  static const historyHospitals = [
-    '北京协和医院', '北京儿童医院', '301 医院', '北京大学人民医院',
-    '北京朝阳医院', '社区卫生服务中心',
-  ];
-
-  static const historyDepartments = [
-    '呼吸内科', '儿科', '骨科', '消化内科', '心内科',
-    '皮肤科', '眼科', '耳鼻喉科', '神经内科', '急诊科',
-  ];
-
-  // ── 选择就诊日期 ────────────────────────────────────────
   Future<void> pickDate(BuildContext context) async {
     final now = DateTime.now();
     DateTime initial;
@@ -136,14 +171,48 @@ class EditController extends GetxController {
     }
   }
 
-  void save() {
-    Get.snackbar(
-      '已保存',
-      '病历已录入，附件 ${attachments.length} 个',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF2DBD6E),
-      colorText: Colors.white,
-    );
+  Future<void> save() async {
+    if (isSaving.value) return;
+    if (hospitalCtrl.text.trim().isEmpty || visitDateCtrl.text.trim().isEmpty) {
+      Get.snackbar('提示', '请至少填写医院和就诊日期', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    final visitDate = DateTime.tryParse(visitDateCtrl.text.trim());
+    if (visitDate == null) {
+      Get.snackbar('提示', '就诊日期格式不正确', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    isSaving.value = true;
+    try {
+      await _repository.saveMedicalRecord(
+        recordId: _editingRecordId,
+        hospitalName: hospitalCtrl.text,
+        department: departmentCtrl.text,
+        doctorName: doctorCtrl.text,
+        visitDate: visitDate,
+        diagnosis: diagnosisCtrl.text,
+        summary: summaryCtrl.text,
+        doctorOrder: prescriptionCtrl.text,
+        memberId: selectedMemberId.value,
+        attachments: attachments.toList(),
+      );
+      historyHospitals.assignAll(await _repository.loadHospitalHistory());
+      historyDepartments.assignAll(await _repository.loadDepartmentHistory());
+      Get.snackbar(
+        '已保存',
+        '病历已写入本地数据库',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF2DBD6E),
+        colorText: Colors.white,
+      );
+      Get.back();
+    } catch (error) {
+      Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isSaving.value = false;
+    }
   }
 
   @override
@@ -157,8 +226,4 @@ class EditController extends GetxController {
     summaryCtrl.dispose();
     super.onClose();
   }
-
-  bool isImageFile(String path) =>
-      !path.toLowerCase().endsWith('.pdf');
 }
-
