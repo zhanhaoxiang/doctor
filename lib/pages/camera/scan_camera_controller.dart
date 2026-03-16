@@ -1,3 +1,4 @@
+import 'package:doctor/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
 import 'package:get/get.dart';
@@ -27,7 +28,7 @@ class ScanCameraController extends GetxController {
       }
     } on DocScanException catch (e) {
       isScanning.value = false;
-      debugPrint('DocScanException: ${e.code} - ${e.message}');
+      logger.i('DocScanException: ${e.code} - ${e.message}');
 
       if (e.code == 'PERMISSION_DENIED') {
         _showPermissionDialog();
@@ -42,7 +43,7 @@ class ScanCameraController extends GetxController {
       }
     } catch (e) {
       isScanning.value = false;
-      debugPrint('Scanner error: $e');
+      logger.i('Scanner error: $e');
       Get.snackbar(
         '扫描失败',
         '请重试',
@@ -68,7 +69,7 @@ class ScanCameraController extends GetxController {
       }
     } catch (e) {
       isPicking.value = false;
-      debugPrint('Gallery pick error: $e');
+      logger.i('Gallery pick error: $e');
       Get.snackbar(
         '选取失败',
         '无法访问相册，请检查权限',

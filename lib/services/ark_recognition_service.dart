@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:doctor/logger.dart';
 
 import '../core/constants/app_constants.dart';
 import '../data/models/recognition_result.dart';
@@ -48,20 +48,20 @@ class ArkRecognitionService {
   /// 1. 先用 OCRService 本地提取文字（无 token 消耗）
   /// 2. 再发送文字给 AI（大幅节省 token）
   static Future<RecognitionResult> recognize(List<String> imagePaths) async {
-    debugPrint('[Ark] Starting recognition, images=${imagePaths.length}');
+    logger.i('[Ark] Starting recognition, images=${imagePaths.length}');
 
     // 第一步：本地 OCR 提取文字
-    debugPrint('[Ark] Extracting text using OCR...');
+    logger.i('[Ark] Extracting text using OCR...');
     final ocrResults = await OCRService.extractText(imagePaths.take(3).toList());
     final mergedText = OCRService.mergeResults(ocrResults);
 
     if (mergedText.isEmpty) {
-      debugPrint('[Ark] OCR extraction failed, no text found');
+      logger.i('[Ark] OCR extraction failed, no text found');
       throw Exception('图片文字提取失败，请确保图片清晰可读');
     }
 
-    debugPrint('[Ark] OCR extracted ${mergedText.length} chars');
-    debugPrint('[Ark] OCR text $mergedText');
+    logger.i('[Ark] OCR extracted ${mergedText.length} chars');
+    logger.i('[Ark] OCR text $mergedText');
 
     // 第二步：发送提取的文字给 AI 进行结构化处理
     final userPrompt = _userPrompt.replaceAll('{ocrText}', mergedText);
@@ -110,19 +110,19 @@ class ArkRecognitionService {
       },
     };
 
-    debugPrint('[Ark] Sending structured request to API');
+    logger.i('[Ark] Sending structured request to API');
 
     final response = await _dio.post<Map<String, dynamic>>(AppConstants.arkEndpoint, data: requestBody);
 
-    debugPrint('[Ark] Response status=${response.statusCode}');
-    debugPrint('[Ark] Response data=${response.data}');
+    logger.i('[Ark] Response status=${response.statusCode}');
+    logger.i('[Ark] Response data=${response.data}');
 
     if (response.statusCode != 200 || response.data == null) {
       throw Exception('API 请求失败 [${response.statusCode}]');
     }
 
     final rawText = _extractText(response.data!);
-    debugPrint('[Ark] Raw text received, length=${rawText.length}');
+    logger.i('[Ark] Raw text received, length=${rawText.length}');
     return RecognitionResult.fromAiText(rawText);
   }
 
@@ -155,7 +155,7 @@ class ArkRecognitionService {
         }
       }
     } catch (e) {
-      debugPrint('[Ark] Parse response error: $e');
+      logger.i('[Ark] Parse response error: $e');
     }
     return '';
   }

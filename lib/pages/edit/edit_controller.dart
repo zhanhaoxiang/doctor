@@ -1,11 +1,12 @@
+import 'package:doctor/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/widgets/calendar_dialog.dart';
 import '../../data/models/family_member.dart';
-import '../../data/models/record_attachment.dart';
 import '../../data/models/recognition_result.dart';
+import '../../data/models/record_attachment.dart';
 import '../../data/repositories/local_data_repository.dart';
 
 class EditController extends GetxController {
@@ -45,10 +46,7 @@ class EditController extends GetxController {
     _loadInitialData();
     final args = Get.arguments;
     if (args is Map<String, dynamic>) {
-      _fillFromRecognition(
-        args['result'] as RecognitionResult?,
-        args['imagePaths'] as List<String>?,
-      );
+      _fillFromRecognition(args['result'] as RecognitionResult?, args['imagePaths'] as List<String>?);
     } else if (args is String) {
       _editingRecordId = args;
       _loadExistingRecord(args);
@@ -79,10 +77,7 @@ class EditController extends GetxController {
     selectedMemberId.value = record.familyMemberId;
   }
 
-  void _fillFromRecognition(
-    RecognitionResult? result,
-    List<String>? imagePaths,
-  ) {
+  void _fillFromRecognition(RecognitionResult? result, List<String>? imagePaths) {
     if (result != null && !result.isEmpty) {
       hospitalCtrl.text = result.hospital;
       departmentCtrl.text = result.department;
@@ -97,16 +92,11 @@ class EditController extends GetxController {
       final now = DateTime.now();
       attachments.addAll(
         imagePaths.asMap().entries.map((entry) {
-          final type = RecordAttachment.typeFromPath(
-            entry.value,
-            defaultType: AttachmentType.medicalPhoto,
-          );
+          final type = RecordAttachment.typeFromPath(entry.value, defaultType: AttachmentType.medicalPhoto);
           return RecordAttachment(
             id: 'img_${now.millisecondsSinceEpoch}_${entry.key}',
             path: entry.value,
-            name: type == AttachmentType.pdf
-                ? '文档 ${entry.key + 1}.pdf'
-                : '病历照片 ${entry.key + 1}',
+            name: type == AttachmentType.pdf ? '文档 ${entry.key + 1}.pdf' : '病历照片 ${entry.key + 1}',
             type: type,
             addedAt: now,
           );
@@ -116,10 +106,7 @@ class EditController extends GetxController {
   }
 
   Future<void> addPhotoFromCamera() async {
-    final image = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 92,
-    );
+    final image = await _picker.pickImage(source: ImageSource.camera, imageQuality: 92);
     if (image == null) return;
     _addImageAttachment(image.path, AttachmentType.medicalPhoto);
   }
@@ -151,17 +138,12 @@ class EditController extends GetxController {
   Future<void> pickDate(BuildContext context) async {
     DateTime? initial;
     try {
-      initial = visitDateCtrl.text.isNotEmpty
-          ? DateTime.parse(visitDateCtrl.text)
-          : null;
+      initial = visitDateCtrl.text.isNotEmpty ? DateTime.parse(visitDateCtrl.text) : null;
     } catch (_) {
       initial = null;
     }
 
-    final picked = await showCalendarDialog(
-      context: context,
-      initialDate: initial,
-    );
+    final picked = await showCalendarDialog(context: context, initialDate: initial);
     if (picked != null) {
       visitDateCtrl.text =
           '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
@@ -180,6 +162,9 @@ class EditController extends GetxController {
       Get.snackbar('提示', '就诊日期格式不正确', snackPosition: SnackPosition.BOTTOM);
       return;
     }
+    logger.i(
+      'Saving record for memberId=${selectedMemberId.value}, hospital=${hospitalCtrl.text}, visitDate=${visitDateCtrl.text}, attachments=${attachments.length}',
+    );
 
     isSaving.value = true;
     try {
@@ -204,8 +189,11 @@ class EditController extends GetxController {
         backgroundColor: const Color(0xFF2DBD6E),
         colorText: Colors.white,
       );
+      logger.i('保存成功');
       Get.back();
     } catch (error) {
+      logger.i('保存失败， ${error}');
+      logger.e(error.toString(), error: error);
       Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
     } finally {
       isSaving.value = false;

@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+
+import 'package:doctor/logger.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 /// 本地 OCR 服务，使用 Google ML Kit Text Recognition 从图片中提取文字
@@ -10,6 +11,7 @@ class OCRService {
 
   // 使用中文识别器
   static TextRecognizer? _chineseRecognizer;
+
   // 使用拉丁文（英文）识别器作为备份
   static TextRecognizer? _latinRecognizer;
 
@@ -19,9 +21,9 @@ class OCRService {
     try {
       _chineseRecognizer = TextRecognizer(script: TextRecognitionScript.chinese);
       _latinRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-      debugPrint('[OCR] Recognizers initialized successfully');
+      logger.i('[OCR] Recognizers initialized successfully');
     } catch (e) {
-      debugPrint('[OCR] Error initializing recognizers: $e');
+      logger.i('[OCR] Error initializing recognizers: $e');
       rethrow;
     }
   }
@@ -41,7 +43,7 @@ class OCRService {
       try {
         final file = File(path);
         if (!file.existsSync()) {
-          debugPrint('[OCR] File not found: $path');
+          logger.i('[OCR] File not found: $path');
           results.add('');
           continue;
         }
@@ -54,10 +56,10 @@ class OCRService {
           final chineseText = await _chineseRecognizer!.processImage(inputImage);
           text = chineseText.text.trim();
           if (text.isNotEmpty) {
-            debugPrint('[OCR] ✓ Chinese recognition: ${text.length} chars from $path');
+            logger.i('[OCR] ✓ Chinese recognition: ${text.length} chars from $path');
           }
         } catch (e) {
-          debugPrint('[OCR] Chinese recognition error: $e');
+          logger.i('[OCR] Chinese recognition error: $e');
         }
 
         // 如果中文识别结果为空，尝试用拉丁文识别器
@@ -67,20 +69,20 @@ class OCRService {
             final latinText = await _latinRecognizer!.processImage(inputImageLatin);
             text = latinText.text.trim();
             if (text.isNotEmpty) {
-              debugPrint('[OCR] ✓ Latin/English recognition: ${text.length} chars from $path');
+              logger.i('[OCR] ✓ Latin/English recognition: ${text.length} chars from $path');
             }
           } catch (e) {
-            debugPrint('[OCR] Latin recognition error: $e');
+            logger.i('[OCR] Latin recognition error: $e');
           }
         }
 
         if (text.isEmpty) {
-          debugPrint('[OCR] ⚠️  No text recognized from $path');
+          logger.i('[OCR] ⚠️  No text recognized from $path');
         }
 
         results.add(text);
       } catch (e) {
-        debugPrint('[OCR] Error processing $path: $e');
+        logger.i('[OCR] Error processing $path: $e');
         results.add('');
       }
     }
@@ -94,11 +96,7 @@ class OCRService {
     final validResults = ocrResults.where((r) => r.isNotEmpty).toList();
     if (validResults.isEmpty) return '';
 
-    return validResults
-        .asMap()
-        .entries
-        .map((e) => '【图片 ${e.key + 1}】\n${e.value}')
-        .join('\n\n');
+    return validResults.asMap().entries.map((e) => '【图片 ${e.key + 1}】\n${e.value}').join('\n\n');
   }
 
   /// 释放资源
@@ -106,9 +104,9 @@ class OCRService {
     try {
       await _chineseRecognizer?.close();
       await _latinRecognizer?.close();
-      debugPrint('[OCR] Recognizers closed');
+      logger.i('[OCR] Recognizers closed');
     } catch (e) {
-      debugPrint('[OCR] Error closing recognizers: $e');
+      logger.i('[OCR] Error closing recognizers: $e');
     }
   }
 }

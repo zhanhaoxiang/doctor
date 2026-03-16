@@ -1,5 +1,7 @@
+import 'package:doctor/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../routes/app_routes.dart';
 import '../../services/ark_recognition_service.dart';
 
@@ -30,20 +32,13 @@ class PhotoPreviewController extends GetxController {
     isRecognizing.value = true;
 
     try {
-      final result =
-          await ArkRecognitionService.recognize(imagePaths.toList());
+      final result = await ArkRecognitionService.recognize(imagePaths.toList());
       isRecognizing.value = false;
 
-      Get.toNamed(
-        AppRoutes.edit,
-        arguments: {
-          'result': result,
-          'imagePaths': imagePaths.toList(),
-        },
-      );
+      Get.toNamed(AppRoutes.edit, arguments: {'result': result, 'imagePaths': imagePaths.toList()});
     } catch (e) {
       isRecognizing.value = false;
-      debugPrint('Recognition error: $e');
+      logger.i('Recognition error: $e');
       Get.snackbar(
         '识别失败',
         '无法连接识别服务，请检查网络后重试',

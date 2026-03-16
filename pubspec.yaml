@@ -49,6 +49,7 @@ dependencies:
   drift_flutter: ^0.3.0
   calendar_date_picker2: ^2.0.1
   path: ^1.9.1
+  logger: ^2.7.0
 
 dev_dependencies:
   flutter_test:

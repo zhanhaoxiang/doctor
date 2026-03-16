@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+
+import 'package:doctor/logger.dart';
 
 /// 火山引擎 AI 识别后从病历图片中提取的结构化信息
 class RecognitionResult {
@@ -24,17 +25,17 @@ class RecognitionResult {
   });
 
   const RecognitionResult.empty()
-      : hospital = '',
-        department = '',
-        doctor = '',
-        visitDate = '',
-        diagnosis = '',
-        prescription = '',
-        summary = '',
-        medicines = const [];
+    : hospital = '',
+      department = '',
+      doctor = '',
+      visitDate = '',
+      diagnosis = '',
+      prescription = '',
+      summary = '',
+      medicines = const [];
 
   /// 从 AI 返回的文本解析 JSON
-  /// 
+  ///
   /// 支持多种格式：
   /// 1. 纯 JSON 对象（response_format: json_object 模式）
   /// 2. JSON 包裹在 markdown 代码块中
@@ -42,7 +43,7 @@ class RecognitionResult {
   factory RecognitionResult.fromAiText(String rawText) {
     try {
       if (rawText.isEmpty) {
-        debugPrint('RecognitionResult parse error: empty text');
+        logger.i('RecognitionResult parse error: empty text');
         return const RecognitionResult.empty();
       }
 
@@ -72,7 +73,7 @@ class RecognitionResult {
         medicines: _parseStringArray(map, 'medicines'),
       );
     } catch (e) {
-      debugPrint('RecognitionResult parse error: $e\nRaw: $rawText');
+      logger.i('RecognitionResult parse error: $e\nRaw: $rawText');
       return const RecognitionResult.empty();
     }
   }
@@ -90,22 +91,16 @@ class RecognitionResult {
     final value = map[key];
     if (value == null) return [];
     if (value is List) {
-      return value
-          .map((e) => e.toString().trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
+      return value.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
     }
     return [];
   }
 
-  bool get isEmpty =>
-      hospital.isEmpty &&
-      department.isEmpty &&
-      diagnosis.isEmpty &&
-      prescription.isEmpty;
+  bool get isEmpty => hospital.isEmpty && department.isEmpty && diagnosis.isEmpty && prescription.isEmpty;
 
   @override
-  String toString() => 'RecognitionResult('
+  String toString() =>
+      'RecognitionResult('
       'hospital=$hospital, '
       'department=$department, '
       'doctor=$doctor, '
