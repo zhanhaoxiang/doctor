@@ -14,8 +14,7 @@ import '../models/next_appointment.dart';
 import '../models/record_attachment.dart' as attachment_model;
 
 class LocalDataRepository extends GetxService {
-  LocalDataRepository({AppDatabase? database})
-    : _db = database ?? AppDatabase();
+  LocalDataRepository({AppDatabase? database}) : _db = database ?? AppDatabase();
 
   final AppDatabase _db;
 
@@ -27,7 +26,7 @@ class LocalDataRepository extends GetxService {
   AppDatabase get db => _db;
 
   Future<void> _ensureSeedData() async {
-    final existing = await _db.select(_db.members).getSingleOrNull();
+    final existing = await (_db.select(_db.members)..limit(1)).getSingleOrNull();
     if (existing != null) return;
 
     final now = DateTime.now();
@@ -45,7 +44,7 @@ class LocalDataRepository extends GetxService {
           .insert(
             MembersCompanion.insert(
               id: memberId,
-              name: '我',
+              name: '默认病历本',
               accentColor: AppColors.accent.toARGB32(),
               tagBgColor: AppColors.accentLight.toARGB32(),
               tagTextColor: AppColors.accentDark.toARGB32(),
@@ -81,14 +80,8 @@ class LocalDataRepository extends GetxService {
         );
 
         batch.insertAll(_db.recordTagLinks, [
-          RecordTagLinksCompanion.insert(
-            recordId: recordId,
-            tagId: tagClinicId,
-          ),
-          RecordTagLinksCompanion.insert(
-            recordId: recordId,
-            tagId: tagHealthId,
-          ),
+          RecordTagLinksCompanion.insert(recordId: recordId, tagId: tagClinicId),
+          RecordTagLinksCompanion.insert(recordId: recordId, tagId: tagHealthId),
         ]);
 
         batch.insert(
@@ -133,23 +126,19 @@ class LocalDataRepository extends GetxService {
   }
 
   Stream<List<FamilyMember>> watchMembers() {
-    final query = _db.select(_db.members)
-      ..orderBy([(table) => drift.OrderingTerm.asc(table.createdAt)]);
+    final query = _db.select(_db.members)..orderBy([(table) => drift.OrderingTerm.asc(table.createdAt)]);
     return query.watch().map((rows) => rows.map(_mapMember).toList());
   }
 
   Future<List<FamilyMember>> loadMembers() async {
-    final query = _db.select(_db.members)
-      ..orderBy([(table) => drift.OrderingTerm.asc(table.createdAt)]);
+    final query = _db.select(_db.members)..orderBy([(table) => drift.OrderingTerm.asc(table.createdAt)]);
     final rows = await query.get();
     return rows.map(_mapMember).toList();
   }
 
   Future<String?> getMemberName(String? memberId) async {
     if (memberId == null) return null;
-    final row = await (_db.select(
-      _db.members,
-    )..where((table) => table.id.equals(memberId))).getSingleOrNull();
+    final row = await (_db.select(_db.members)..where((table) => table.id.equals(memberId))).getSingleOrNull();
     return row?.name;
   }
 
@@ -248,9 +237,7 @@ class LocalDataRepository extends GetxService {
   }
 
   Future<record_model.MedicalRecord?> getMedicalRecord(String recordId) async {
-    final row = await (_db.select(
-      _db.medicalRecords,
-    )..where((table) => table.id.equals(recordId))).getSingleOrNull();
+    final row = await (_db.select(_db.medicalRecords)..where((table) => table.id.equals(recordId))).getSingleOrNull();
     if (row == null) return null;
 
     final tagRows = await _db
@@ -328,17 +315,10 @@ class LocalDataRepository extends GetxService {
   }
 
   Stream<List<record_model.RecordTag>> watchTags() {
-    final query = _db.select(_db.tags)
-      ..orderBy([(table) => drift.OrderingTerm.asc(table.createdAt)]);
+    final query = _db.select(_db.tags)..orderBy([(table) => drift.OrderingTerm.asc(table.createdAt)]);
     return query.watch().map(
       (rows) => rows
-          .map(
-            (row) => record_model.RecordTag(
-              row.label,
-              bgColorValue: row.bgColor,
-              textColorValue: row.textColor,
-            ),
-          )
+          .map((row) => record_model.RecordTag(row.label, bgColorValue: row.bgColor, textColorValue: row.textColor))
           .toList(),
     );
   }
@@ -408,8 +388,7 @@ class LocalDataRepository extends GetxService {
                   note: row.data['note'] as String?,
                   memberId: row.data['member_id'] as String?,
                   memberName: row.data['member_name'] as String?,
-                  isDefaultMember:
-                      (row.data['is_default_member'] as bool?) ?? false,
+                  isDefaultMember: (row.data['is_default_member'] as bool?) ?? false,
                 ),
               )
               .toList(),
@@ -417,18 +396,12 @@ class LocalDataRepository extends GetxService {
   }
 
   Stream<List<AppNotification>> watchNotifications() {
-    final query = _db.select(_db.notifications)
-      ..orderBy([(table) => drift.OrderingTerm.desc(table.createdAt)]);
+    final query = _db.select(_db.notifications)..orderBy([(table) => drift.OrderingTerm.desc(table.createdAt)]);
     return query.watch().map(
       (rows) => rows
           .map(
-            (row) => AppNotification(
-              id: row.id,
-              title: row.title,
-              body: row.body,
-              createdAt: row.createdAt,
-              type: row.type,
-            ),
+            (row) =>
+                AppNotification(id: row.id, title: row.title, body: row.body, createdAt: row.createdAt, type: row.type),
           )
           .toList(),
     );
@@ -463,8 +436,9 @@ class LocalDataRepository extends GetxService {
       throw ArgumentError('成员名称不能为空');
     }
 
-    await (_db.update(_db.members)..where((table) => table.id.equals(id)))
-        .write(MembersCompanion(name: drift.Value(trimmed)));
+    await (_db.update(
+      _db.members,
+    )..where((table) => table.id.equals(id))).write(MembersCompanion(name: drift.Value(trimmed)));
   }
 
   Future<void> addTag(String label) async {
@@ -473,20 +447,12 @@ class LocalDataRepository extends GetxService {
       throw ArgumentError('标签名称不能为空');
     }
 
-    final exists = await (_db.select(
-      _db.tags,
-    )..where((table) => table.label.equals(normalized))).getSingleOrNull();
+    final exists = await (_db.select(_db.tags)..where((table) => table.label.equals(normalized))).getSingleOrNull();
     if (exists != null) return;
 
     await _db
         .into(_db.tags)
-        .insert(
-          TagsCompanion.insert(
-            id: _newId('tag'),
-            label: normalized,
-            createdAt: DateTime.now(),
-          ),
-        );
+        .insert(TagsCompanion.insert(id: _newId('tag'), label: normalized, createdAt: DateTime.now()));
   }
 
   Future<void> renameTag(String oldLabel, String newLabel) async {
@@ -495,8 +461,9 @@ class LocalDataRepository extends GetxService {
       throw ArgumentError('标签名称不能为空');
     }
 
-    await (_db.update(_db.tags)..where((table) => table.label.equals(oldLabel)))
-        .write(TagsCompanion(label: drift.Value(normalized)));
+    await (_db.update(
+      _db.tags,
+    )..where((table) => table.label.equals(oldLabel))).write(TagsCompanion(label: drift.Value(normalized)));
   }
 
   Future<void> addReminder({
@@ -556,9 +523,7 @@ class LocalDataRepository extends GetxService {
     final normalizedSummary = summary.trim();
     final normalizedDoctorOrder = doctorOrder.trim();
     final resolvedRecordId = recordId ?? _newId('record');
-    final departmentTagId = normalizedDepartment.isEmpty
-        ? null
-        : await _ensureTagExists('#$normalizedDepartment');
+    final departmentTagId = normalizedDepartment.isEmpty ? null : await _ensureTagExists('#$normalizedDepartment');
 
     await _db.transaction(() async {
       if (recordId == null) {
@@ -568,22 +533,12 @@ class LocalDataRepository extends GetxService {
               MedicalRecordsCompanion.insert(
                 id: resolvedRecordId,
                 hospitalName: normalizedHospital,
-                department: drift.Value(
-                  normalizedDepartment.isEmpty ? null : normalizedDepartment,
-                ),
-                doctorName: drift.Value(
-                  normalizedDoctor.isEmpty ? null : normalizedDoctor,
-                ),
+                department: drift.Value(normalizedDepartment.isEmpty ? null : normalizedDepartment),
+                doctorName: drift.Value(normalizedDoctor.isEmpty ? null : normalizedDoctor),
                 visitDate: visitDate,
-                complaint: drift.Value(
-                  normalizedDiagnosis.isEmpty ? null : normalizedDiagnosis,
-                ),
-                diagnosis: drift.Value(
-                  normalizedDiagnosis.isEmpty ? null : normalizedDiagnosis,
-                ),
-                aiSummary: normalizedSummary.isEmpty
-                    ? '暂无摘要'
-                    : normalizedSummary,
+                complaint: drift.Value(normalizedDiagnosis.isEmpty ? null : normalizedDiagnosis),
+                diagnosis: drift.Value(normalizedDiagnosis.isEmpty ? null : normalizedDiagnosis),
+                aiSummary: normalizedSummary.isEmpty ? '暂无摘要' : normalizedSummary,
                 doctorOrder: drift.Value(normalizedDoctorOrder),
                 source: const drift.Value('手动录入'),
                 memberId: drift.Value(memberId),
@@ -592,50 +547,29 @@ class LocalDataRepository extends GetxService {
               ),
             );
       } else {
-        await (_db.update(
-          _db.medicalRecords,
-        )..where((table) => table.id.equals(resolvedRecordId))).write(
+        await (_db.update(_db.medicalRecords)..where((table) => table.id.equals(resolvedRecordId))).write(
           MedicalRecordsCompanion(
             hospitalName: drift.Value(normalizedHospital),
-            department: drift.Value(
-              normalizedDepartment.isEmpty ? null : normalizedDepartment,
-            ),
-            doctorName: drift.Value(
-              normalizedDoctor.isEmpty ? null : normalizedDoctor,
-            ),
+            department: drift.Value(normalizedDepartment.isEmpty ? null : normalizedDepartment),
+            doctorName: drift.Value(normalizedDoctor.isEmpty ? null : normalizedDoctor),
             visitDate: drift.Value(visitDate),
-            complaint: drift.Value(
-              normalizedDiagnosis.isEmpty ? null : normalizedDiagnosis,
-            ),
-            diagnosis: drift.Value(
-              normalizedDiagnosis.isEmpty ? null : normalizedDiagnosis,
-            ),
-            aiSummary: drift.Value(
-              normalizedSummary.isEmpty ? '暂无摘要' : normalizedSummary,
-            ),
+            complaint: drift.Value(normalizedDiagnosis.isEmpty ? null : normalizedDiagnosis),
+            diagnosis: drift.Value(normalizedDiagnosis.isEmpty ? null : normalizedDiagnosis),
+            aiSummary: drift.Value(normalizedSummary.isEmpty ? '暂无摘要' : normalizedSummary),
             doctorOrder: drift.Value(normalizedDoctorOrder),
             source: const drift.Value('手动录入'),
             memberId: drift.Value(memberId),
             updatedAt: drift.Value(now),
           ),
         );
-        await (_db.delete(
-          _db.recordAttachments,
-        )..where((table) => table.recordId.equals(resolvedRecordId))).go();
-        await (_db.delete(
-          _db.recordTagLinks,
-        )..where((table) => table.recordId.equals(resolvedRecordId))).go();
+        await (_db.delete(_db.recordAttachments)..where((table) => table.recordId.equals(resolvedRecordId))).go();
+        await (_db.delete(_db.recordTagLinks)..where((table) => table.recordId.equals(resolvedRecordId))).go();
       }
 
       if (departmentTagId != null) {
         await _db
             .into(_db.recordTagLinks)
-            .insert(
-              RecordTagLinksCompanion.insert(
-                recordId: resolvedRecordId,
-                tagId: departmentTagId,
-              ),
-            );
+            .insert(RecordTagLinksCompanion.insert(recordId: resolvedRecordId, tagId: departmentTagId));
       }
 
       if (attachments.isNotEmpty) {
@@ -731,21 +665,11 @@ class LocalDataRepository extends GetxService {
 
   Future<String> _ensureTagExists(String label) async {
     final normalized = _normalizeTagLabel(label);
-    final existing = await (_db.select(
-      _db.tags,
-    )..where((table) => table.label.equals(normalized))).getSingleOrNull();
+    final existing = await (_db.select(_db.tags)..where((table) => table.label.equals(normalized))).getSingleOrNull();
     if (existing != null) return existing.id;
 
     final id = _newId('tag');
-    await _db
-        .into(_db.tags)
-        .insert(
-          TagsCompanion.insert(
-            id: id,
-            label: normalized,
-            createdAt: DateTime.now(),
-          ),
-        );
+    await _db.into(_db.tags).insert(TagsCompanion.insert(id: id, label: normalized, createdAt: DateTime.now()));
     return id;
   }
 
@@ -765,8 +689,7 @@ class LocalDataRepository extends GetxService {
     return palettes[index % palettes.length];
   }
 
-  String _newId(String prefix) =>
-      '${prefix}_${DateTime.now().microsecondsSinceEpoch}';
+  String _newId(String prefix) => '${prefix}_${DateTime.now().microsecondsSinceEpoch}';
 
   attachment_model.AttachmentType _attachmentTypeFromDb(String value) {
     switch (value) {

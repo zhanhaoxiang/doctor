@@ -17,7 +17,7 @@ void main() {
     final members = await repository.loadMembers();
 
     expect(members, isNotEmpty);
-    expect(members.first.name, '我');
+    expect(members.first.name, '默认病历本');
 
     await repository.close();
     Get.reset();

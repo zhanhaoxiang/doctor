@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
+import '../../core/widgets/ios_dialogs.dart';
 import '../../data/models/medical_record.dart';
 import 'tags_controller.dart';
 
@@ -61,48 +62,30 @@ class TagsPage extends GetView<TagsController> {
   }
 
   Future<void> _showTagDialog(BuildContext context, {RecordTag? tag}) async {
-    final textController = TextEditingController(text: tag?.label ?? '');
-    await Get.dialog(
-      AlertDialog(
-        title: Text(tag == null ? '新增标签' : '修改标签'),
-        content: TextField(
-          controller: textController,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: '例如：#呼吸内科'),
-        ),
-        actions: [
-          TextButton(onPressed: Get.back, child: const Text('取消')),
-          FilledButton(
-            onPressed: () async {
-              final label = textController.text.trim();
-              if (label.isEmpty) {
-                Get.snackbar(
-                  '提示',
-                  '标签不能为空',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-                return;
-              }
-              try {
-                if (tag == null) {
-                  await controller.addTag(label);
-                } else {
-                  await controller.renameTag(tag.label, label);
-                }
-                Get.back();
-              } catch (error) {
-                Get.snackbar(
-                  '保存失败',
-                  '$error',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              }
-            },
-            child: const Text('保存'),
-          ),
-        ],
-      ),
+    final label = await showIosTextInputDialog(
+      title: tag == null ? '新增标签' : '修改标签',
+      initialValue: tag?.label,
+      placeholder: '例如：#呼吸内科',
+      confirmText: '保存',
+      maxLength: 20,
     );
+
+    if (label == null || label.isEmpty) {
+      if (label != null) {
+        Get.snackbar('提示', '标签不能为空', snackPosition: SnackPosition.BOTTOM);
+      }
+      return;
+    }
+
+    try {
+      if (tag == null) {
+        await controller.addTag(label);
+      } else {
+        await controller.renameTag(tag.label, label);
+      }
+    } catch (error) {
+      Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
+    }
   }
 }
 

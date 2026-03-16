@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/calendar_dialog.dart';
 import '../../data/models/app_reminder.dart';
 import 'reminders_controller.dart';
 
@@ -66,118 +68,20 @@ class RemindersPage extends GetView<RemindersController> {
   }
 
   Future<void> _showCreateDialog(BuildContext context) async {
-    final titleController = TextEditingController();
-    final bodyController = TextEditingController();
-    final remindAt = Rx<DateTime>(DateTime.now().add(const Duration(hours: 1)));
-    final selectedMemberId = RxnString(
-      controller.members.isNotEmpty ? controller.members.first.id : null,
-    );
-
-    await Get.dialog(
-      AlertDialog(
-        title: const Text('新建提醒'),
-        content: StatefulBuilder(
-          builder: (context, setState) {
-            return SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(labelText: '标题'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: bodyController,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: const InputDecoration(labelText: '内容'),
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String?>(
-                    initialValue: selectedMemberId.value,
-                    items: [
-                      const DropdownMenuItem<String?>(
-                        value: null,
-                        child: Text('不指定成员'),
-                      ),
-                      ...controller.members.map(
-                        (member) => DropdownMenuItem<String?>(
-                          value: member.id,
-                          child: Text(member.name),
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      selectedMemberId.value = value;
-                      setState(() {});
-                    },
-                    decoration: const InputDecoration(labelText: '成员'),
-                  ),
-                  const SizedBox(height: 12),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('提醒时间'),
-                    subtitle: Text(
-                      '${remindAt.value.year}-${remindAt.value.month.toString().padLeft(2, '0')}-${remindAt.value.day.toString().padLeft(2, '0')} ${remindAt.value.hour.toString().padLeft(2, '0')}:${remindAt.value.minute.toString().padLeft(2, '0')}',
-                    ),
-                    trailing: const Icon(Icons.calendar_month_rounded),
-                    onTap: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: remindAt.value,
-                        firstDate: DateTime.now().subtract(
-                          const Duration(days: 1),
-                        ),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                        locale: const Locale('zh', 'CN'),
-                      );
-                      if (date == null || !context.mounted) return;
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.fromDateTime(remindAt.value),
-                      );
-                      if (time == null) return;
-                      remindAt.value = DateTime(
-                        date.year,
-                        date.month,
-                        date.day,
-                        time.hour,
-                        time.minute,
-                      );
-                      setState(() {});
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(onPressed: Get.back, child: const Text('取消')),
-          FilledButton(
-            onPressed: () async {
-              final title = titleController.text.trim();
-              final body = bodyController.text.trim();
-              if (title.isEmpty || body.isEmpty) {
-                Get.snackbar(
-                  '提示',
-                  '请填写完整提醒内容',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-                return;
-              }
-              await controller.addReminder(
-                title: title,
-                body: body,
-                remindAt: remindAt.value,
-                memberId: selectedMemberId.value,
-              );
-              Get.back();
-            },
-            child: const Text('保存'),
-          ),
-        ],
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _CreateReminderSheet(
+        members: controller.members.toList(),
+        onSave: (title, body, remindAt, memberId) async {
+          await controller.addReminder(
+            title: title,
+            body: body,
+            remindAt: remindAt,
+            memberId: memberId,
+          );
+        },
       ),
     );
   }
@@ -387,5 +291,497 @@ class _IconBtn extends StatelessWidget {
         child: Center(child: child),
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// iOS 风格新建提醒底部面板
+// ─────────────────────────────────────────────────────────────
+typedef _SaveCallback =
+    Future<void> Function(
+      String title,
+      String body,
+      DateTime remindAt,
+      String? memberId,
+    );
+
+class _CreateReminderSheet extends StatefulWidget {
+  const _CreateReminderSheet({
+    required this.members,
+    required this.onSave,
+  });
+
+  final List<dynamic> members;
+  final _SaveCallback onSave;
+
+  @override
+  State<_CreateReminderSheet> createState() => _CreateReminderSheetState();
+}
+
+class _CreateReminderSheetState extends State<_CreateReminderSheet> {
+  final _titleCtrl = TextEditingController();
+  final _bodyCtrl = TextEditingController();
+  late DateTime _remindAt;
+  String? _selectedMemberId;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _remindAt = DateTime.now().add(const Duration(hours: 1));
+    if (widget.members.isNotEmpty) {
+      _selectedMemberId = (widget.members.first as dynamic).id as String?;
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _bodyCtrl.dispose();
+    super.dispose();
+  }
+
+  String _formatDateTime(DateTime dt) {
+    final y = dt.year;
+    final mo = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    final h = dt.hour.toString().padLeft(2, '0');
+    final mi = dt.minute.toString().padLeft(2, '0');
+    return '$y-$mo-$d  $h:$mi';
+  }
+
+  Future<void> _pickDateTime() async {
+    // 先选日期（使用日历弹窗）
+    final date = await showCalendarDialog(
+      context: context,
+      initialDate: _remindAt,
+      minimumDate: DateTime.now().subtract(const Duration(days: 1)),
+      maximumDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (date == null || !mounted) return;
+
+    // 再选时间（CupertinoDatePicker time 模式）
+    DateTime picked = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      _remindAt.hour,
+      _remindAt.minute,
+    );
+
+    final confirmed = await showCupertinoModalPopup<bool>(
+      context: context,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFFF9F9F9),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD1D1D6),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: const Text(
+                        '取消',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF8A8A8F),
+                        ),
+                      ),
+                    ),
+                    const Text(
+                      '选择时间',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1C1C1E),
+                      ),
+                    ),
+                    CupertinoButton(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: Text(
+                        '完成',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.accent,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 180,
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.time,
+                  use24hFormat: true,
+                  initialDateTime: picked,
+                  onDateTimeChanged: (dt) {
+                    picked = DateTime(
+                      date.year,
+                      date.month,
+                      date.day,
+                      dt.hour,
+                      dt.minute,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _remindAt = picked);
+    }
+  }
+
+  Future<void> _save() async {
+    final title = _titleCtrl.text.trim();
+    final body = _bodyCtrl.text.trim();
+    if (title.isEmpty) {
+      Get.snackbar('提示', '请填写提醒标题', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (body.isEmpty) {
+      Get.snackbar('提示', '请填写提醒内容', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await widget.onSave(title, body, _remindAt, _selectedMemberId);
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF2F2F7),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 拖动条 + 顶部栏
+            Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 4),
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1D1D6),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text(
+                      '取消',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF8A8A8F),
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    '新建提醒',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1C1C1E),
+                    ),
+                  ),
+                  CupertinoButton(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const CupertinoActivityIndicator()
+                        : Text(
+                            '保存',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.accent,
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            // 表单区
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  // 标题 & 内容
+                  _FormCard(
+                    children: [
+                      _FormField(
+                        label: '标题',
+                        controller: _titleCtrl,
+                        hint: '提醒标题',
+                      ),
+                      const _Divider(),
+                      _FormField(
+                        label: '内容',
+                        controller: _bodyCtrl,
+                        hint: '提醒内容',
+                        minLines: 2,
+                        maxLines: 4,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // 时间 & 成员
+                  _FormCard(
+                    children: [
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _pickDateTime,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 13,
+                          ),
+                          child: Row(
+                            children: [
+                              const SizedBox(
+                                width: 64,
+                                child: Text(
+                                  '提醒时间',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF8A8A8F),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  _formatDateTime(_remindAt),
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                size: 16,
+                                color: Color(0xFFC7C7CC),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (widget.members.isNotEmpty) ...[
+                        const _Divider(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            children: [
+                              const SizedBox(
+                                width: 64,
+                                child: Text(
+                                  '成员',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF8A8A8F),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String?>(
+                                    value: _selectedMemberId,
+                                    alignment: Alignment.centerRight,
+                                    icon: const Icon(
+                                      Icons.expand_more_rounded,
+                                      size: 18,
+                                      color: Color(0xFFC7C7CC),
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF1C1C1E),
+                                    ),
+                                    items: [
+                                      const DropdownMenuItem<String?>(
+                                        value: null,
+                                        child: Text(
+                                          '不指定成员',
+                                          style: TextStyle(
+                                            color: Color(0xFF8A8A8F),
+                                          ),
+                                        ),
+                                      ),
+                                      ...widget.members.map(
+                                        (m) => DropdownMenuItem<String?>(
+                                          value: (m as dynamic).id as String?,
+                                          child: Text(
+                                            (m as dynamic).name as String,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                    onChanged: (v) =>
+                                        setState(() => _selectedMemberId = v),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FormCard extends StatelessWidget {
+  const _FormCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: children),
+    );
+  }
+}
+
+class _FormField extends StatelessWidget {
+  const _FormField({
+    required this.label,
+    required this.controller,
+    required this.hint,
+    this.minLines = 1,
+    this.maxLines = 1,
+  });
+
+  final String label;
+  final TextEditingController controller;
+  final String hint;
+  final int minLines;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: SizedBox(
+              width: 64,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF8A8A8F),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              minLines: minLines,
+              maxLines: maxLines,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF1C1C1E)),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFFC7C7CC),
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Divider extends StatelessWidget {
+  const _Divider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(height: 0.5, color: const Color(0x1A000000), margin: const EdgeInsets.only(left: 78));
   }
 }

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
+import '../../core/widgets/ios_dialogs.dart';
 import '../../data/models/member_summary.dart';
 import 'family_controller.dart';
 
@@ -57,51 +58,32 @@ class FamilyPage extends GetView<FamilyController> {
     BuildContext context, {
     MemberSummary? member,
   }) async {
-    final textController = TextEditingController(
-      text: member?.member.name ?? '',
+    final isNew = member == null;
+    final name = await showIosTextInputDialog(
+      title: isNew ? '新增成员' : '修改名称',
+      subtitle: isNew ? '为新成员起个名字' : null,
+      initialValue: member?.member.name,
+      placeholder: '请输入成员名称',
+      confirmText: '保存',
+      maxLength: 20,
     );
-    await Get.dialog(
-      AlertDialog(
-        title: Text(member == null ? '新增成员' : '修改成员名称'),
-        content: TextField(
-          controller: textController,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: '请输入成员名称'),
-        ),
-        actions: [
-          TextButton(onPressed: Get.back, child: const Text('取消')),
-          FilledButton(
-            onPressed: () async {
-              final name = textController.text.trim();
-              if (name.isEmpty) {
-                Get.snackbar(
-                  '提示',
-                  '成员名称不能为空',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-                return;
-              }
-              try {
-                if (member == null) {
-                  await controller.addMember(name);
-                } else {
-                  await controller.renameMember(member.member.id, name);
-                }
-                Get.back();
-              } catch (error) {
-                Get.snackbar(
-                  '保存失败',
-                  '$error',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              }
-            },
-            child: const Text('保存'),
-          ),
-        ],
-      ),
-      barrierDismissible: true,
-    );
+
+    if (name == null || name.isEmpty) {
+      if (name != null) {
+        Get.snackbar('提示', '成员名称不能为空', snackPosition: SnackPosition.BOTTOM);
+      }
+      return;
+    }
+
+    try {
+      if (isNew) {
+        await controller.addMember(name);
+      } else {
+        await controller.renameMember(member.member.id, name);
+      }
+    } catch (error) {
+      Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
+    }
   }
 }
 

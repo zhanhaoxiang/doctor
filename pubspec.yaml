@@ -47,6 +47,8 @@ dependencies:
   google_mlkit_text_recognition: ^0.15.1
   drift: ^2.32.0
   drift_flutter: ^0.3.0
+  calendar_date_picker2: ^2.0.1
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

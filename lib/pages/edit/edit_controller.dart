@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/widgets/calendar_dialog.dart';
 import '../../data/models/family_member.dart';
 import '../../data/models/record_attachment.dart';
 import '../../data/models/recognition_result.dart';
@@ -148,22 +149,18 @@ class EditController extends GetxController {
   }
 
   Future<void> pickDate(BuildContext context) async {
-    final now = DateTime.now();
-    DateTime initial;
+    DateTime? initial;
     try {
       initial = visitDateCtrl.text.isNotEmpty
           ? DateTime.parse(visitDateCtrl.text)
-          : now;
+          : null;
     } catch (_) {
-      initial = now;
+      initial = null;
     }
 
-    final picked = await showDatePicker(
+    final picked = await showCalendarDialog(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: now,
-      locale: const Locale('zh', 'CN'),
     );
     if (picked != null) {
       visitDateCtrl.text =
