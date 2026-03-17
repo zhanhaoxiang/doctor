@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,7 +16,7 @@ class DetailPage extends GetView<DetailController> {
       title: '病历详情',
       trailing: GestureDetector(
         onTap: () =>
-            Get.snackbar('操作', '更多操作稍后支持', snackPosition: SnackPosition.BOTTOM),
+            AppToast.show('更多操作稍后支持'),
         child: Container(
           width: 32,
           height: 32,
@@ -196,29 +197,17 @@ class DetailPage extends GetView<DetailController> {
           _ActionBtn(
             icon: Icons.share_rounded,
             label: '分享',
-            onTap: () => Get.snackbar(
-              '分享',
-              '分享病历功能稍后支持',
-              snackPosition: SnackPosition.BOTTOM,
-            ),
+            onTap: () => AppToast.show('分享病历功能稍后支持'),
           ),
           _ActionBtn(
             icon: Icons.notifications_outlined,
             label: '提醒',
-            onTap: () => Get.snackbar(
-              '提醒',
-              '可在提醒页中新增提醒',
-              snackPosition: SnackPosition.BOTTOM,
-            ),
+            onTap: () => AppToast.show('可在提醒页中新增提醒'),
           ),
           _ActionBtn(
             icon: Icons.archive_outlined,
             label: '归档',
-            onTap: () => Get.snackbar(
-              '归档',
-              '归档功能稍后支持',
-              snackPosition: SnackPosition.BOTTOM,
-            ),
+            onTap: () => AppToast.show('归档功能稍后支持'),
           ),
         ],
       ),

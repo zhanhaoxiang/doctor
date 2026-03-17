@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
@@ -76,7 +77,7 @@ class OcrReviewPage extends StatelessWidget {
           GestureDetector(
             onTap: () {
               Get.back();
-              Get.snackbar('保存', '识别结果已保存', snackPosition: SnackPosition.BOTTOM);
+              AppToast.success('识别结果已保存');
             },
             child: const Text('保存',
                 style: TextStyle(fontSize: 15, color: AppColors.accent, fontWeight: FontWeight.w600)),

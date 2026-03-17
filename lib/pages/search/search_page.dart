@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
@@ -110,7 +111,7 @@ class SearchPage extends StatelessWidget {
       child: Row(
         children: [
           _IconBtn(
-            onTap: () => Get.snackbar('菜单', '打开菜单', snackPosition: SnackPosition.BOTTOM),
+            onTap: () => AppToast.show('打开菜单'),
             child: const Icon(Icons.menu_rounded, size: 16, color: AppColors.ink2),
           ),
           const Expanded(

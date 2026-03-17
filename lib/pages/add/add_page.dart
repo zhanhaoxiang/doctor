@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
@@ -66,7 +67,7 @@ class AddPage extends StatelessWidget {
             ),
           ),
           GestureDetector(
-            onTap: () => Get.snackbar('保存', '病历已保存', snackPosition: SnackPosition.BOTTOM),
+            onTap: () => AppToast.success('病历已保存'),
             child: const Text('保存',
                 style: TextStyle(fontSize: 15, color: AppColors.accent, fontWeight: FontWeight.w600)),
           ),
@@ -120,7 +121,7 @@ class AddPage extends StatelessWidget {
       child: Column(
         children: [
           _FormRow(label: '成员', value: '妈妈', hasChevron: true,
-              onTap: () => Get.snackbar('成员', '选择家庭成员', snackPosition: SnackPosition.BOTTOM)),
+              onTap: () => AppToast.show('选择家庭成员')),
           Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14),
           _FormRow(label: '就诊日期', value: '2026-03-08'),
           Divider(height: 1, color: AppColors.line, indent: 14, endIndent: 14),
@@ -149,7 +150,7 @@ class AddPage extends StatelessWidget {
             _AttachChip(label: '处方.pdf', icon: Icons.picture_as_pdf_rounded),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: () => Get.snackbar('附件', '添加附件', snackPosition: SnackPosition.BOTTOM),
+              onTap: () => AppToast.show('添加附件'),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(

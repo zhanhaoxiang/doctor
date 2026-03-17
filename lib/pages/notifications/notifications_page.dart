@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -16,7 +17,7 @@ class NotificationsPage extends GetView<NotificationsController> {
       trailing: GestureDetector(
         onTap: () async {
           await controller.clearAll();
-          Get.snackbar('清空成功', '通知列表已清空', snackPosition: SnackPosition.BOTTOM);
+          AppToast.success('通知列表已清空');
         },
         child: Container(
           width: 32,

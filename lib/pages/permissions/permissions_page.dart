@@ -1,5 +1,5 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
 
@@ -17,7 +17,7 @@ class PermissionsPage extends StatelessWidget {
     return CommonPage(
       title: '权限授权',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('帮助', '权限说明', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => AppToast.show('权限说明'),
         child: Container(
           width: 32, height: 32,
           decoration: BoxDecoration(
@@ -83,7 +83,7 @@ class _PermCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           GestureDetector(
-            onTap: () => Get.snackbar('授权', '正在跳转系统设置...', snackPosition: SnackPosition.BOTTOM),
+            onTap: () => AppToast.show('正在跳转系统设置...'),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(

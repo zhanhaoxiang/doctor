@@ -4,6 +4,8 @@ import 'package:flutter_doc_scanner/flutter_doc_scanner.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/utils/app_toast.dart';
+
 import '../../routes/app_routes.dart';
 
 class ScanCameraController extends GetxController {
@@ -33,24 +35,12 @@ class ScanCameraController extends GetxController {
       if (e.code == 'PERMISSION_DENIED') {
         _showPermissionDialog();
       } else {
-        Get.snackbar(
-          '扫描失败',
-          e.code == 'SCAN_FAILED' ? '扫描失败，请重试' : '设备不支持文档扫描，请使用相册导入',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.black87,
-          colorText: Colors.white,
-        );
+        AppToast.error(e.code == 'SCAN_FAILED' ? '扫描失败，请重试' : '设备不支持文档扫描，请使用相册导入');
       }
     } catch (e) {
       isScanning.value = false;
       logger.i('Scanner error: $e');
-      Get.snackbar(
-        '扫描失败',
-        '请重试',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.black87,
-        colorText: Colors.white,
-      );
+      AppToast.error('扫描失败，请重试');
     }
   }
 
@@ -70,13 +60,7 @@ class ScanCameraController extends GetxController {
     } catch (e) {
       isPicking.value = false;
       logger.i('Gallery pick error: $e');
-      Get.snackbar(
-        '选取失败',
-        '无法访问相册，请检查权限',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.black87,
-        colorText: Colors.white,
-      );
+      AppToast.error('选取失败，无法访问相册，请检查权限');
     }
   }
 

@@ -50,6 +50,7 @@ dependencies:
   calendar_date_picker2: ^2.0.1
   path: ^1.9.1
   logger: ^2.7.0
+  oktoast: ^3.4.0
 
 dev_dependencies:
   flutter_test:

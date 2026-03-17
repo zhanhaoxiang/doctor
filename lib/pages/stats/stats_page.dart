@@ -1,5 +1,5 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
 
@@ -11,7 +11,7 @@ class StatsPage extends StatelessWidget {
     return CommonPage(
       title: '统计',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('筛选', '选择时间范围', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => AppToast.show('选择时间范围'),
         child: Container(
           width: 32, height: 32,
           decoration: BoxDecoration(

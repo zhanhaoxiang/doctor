@@ -1,5 +1,5 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
 
@@ -18,7 +18,7 @@ class ExportPage extends StatelessWidget {
     return CommonPage(
       title: '导出与备份',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('云备份', '正在备份...', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => AppToast.show('正在备份...'),
         child: Container(
           width: 32, height: 32,
           decoration: BoxDecoration(
@@ -72,7 +72,7 @@ class _ExportCard extends StatelessWidget {
                 style: const TextStyle(fontSize: 14, color: AppColors.ink1)),
           ),
           GestureDetector(
-            onTap: () => Get.snackbar(item.btnLabel, '${item.label} - 处理中...', snackPosition: SnackPosition.BOTTOM),
+            onTap: () => AppToast.show('${item.label} - 处理中...'),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(

@@ -1,5 +1,5 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
 
@@ -19,7 +19,7 @@ class AttachmentsPage extends StatelessWidget {
     return CommonPage(
       title: '附件',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('添加', '添加附件', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => AppToast.show('添加附件'),
         child: Container(
           width: 32, height: 32,
           decoration: BoxDecoration(

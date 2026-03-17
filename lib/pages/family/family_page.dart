@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -70,7 +71,7 @@ class FamilyPage extends GetView<FamilyController> {
 
     if (name == null || name.isEmpty) {
       if (name != null) {
-        Get.snackbar('提示', '成员名称不能为空', snackPosition: SnackPosition.BOTTOM);
+        AppToast.show('成员名称不能为空');
       }
       return;
     }
@@ -82,7 +83,7 @@ class FamilyPage extends GetView<FamilyController> {
         await controller.renameMember(member.member.id, name);
       }
     } catch (error) {
-      Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
+      AppToast.error('保存失败：$error');
     }
   }
 }

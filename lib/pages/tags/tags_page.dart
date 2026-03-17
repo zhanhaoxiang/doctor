@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -72,7 +73,7 @@ class TagsPage extends GetView<TagsController> {
 
     if (label == null || label.isEmpty) {
       if (label != null) {
-        Get.snackbar('提示', '标签不能为空', snackPosition: SnackPosition.BOTTOM);
+        AppToast.show('标签不能为空');
       }
       return;
     }
@@ -84,7 +85,7 @@ class TagsPage extends GetView<TagsController> {
         await controller.renameTag(tag.label, label);
       }
     } catch (error) {
-      Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
+      AppToast.error('保存失败：$error');
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
+import 'package:oktoast/oktoast.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/translations/app_translations.dart';
@@ -25,7 +26,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return OKToast(
+      child: GetMaterialApp(
       title: 'Doctor',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
@@ -41,6 +43,7 @@ class MyApp extends StatelessWidget {
       initialRoute: AppRoutes.main,
       getPages: AppPages.routes,
       debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }

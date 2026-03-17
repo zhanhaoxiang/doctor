@@ -1,5 +1,5 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
 
@@ -26,7 +26,7 @@ class ReportViewPage extends StatelessWidget {
     return CommonPage(
       title: '检查报告',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('导出', '正在导出报告...', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => AppToast.show('正在导出报告...'),
         child: Container(
           width: 40, height: 32,
           decoration: BoxDecoration(

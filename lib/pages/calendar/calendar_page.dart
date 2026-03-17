@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
@@ -16,7 +17,7 @@ class CalendarPage extends StatelessWidget {
     return CommonPage(
       title: '就诊日历',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('筛选', '选择月份', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => AppToast.show('选择月份'),
         child: Container(
           width: 32, height: 32,
           decoration: BoxDecoration(

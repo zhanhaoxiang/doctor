@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
@@ -126,7 +127,7 @@ class OnboardingPage extends StatelessWidget {
       children: [
         Expanded(
           child: GestureDetector(
-            onTap: () => Get.snackbar('了解更多', '查看使用指南', snackPosition: SnackPosition.BOTTOM),
+            onTap: () => AppToast.show('查看使用指南'),
             child: Container(
               height: 48,
               decoration: BoxDecoration(

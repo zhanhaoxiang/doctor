@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
@@ -56,7 +57,7 @@ class PrintPreviewPage extends StatelessWidget {
             ),
           ),
           GestureDetector(
-            onTap: () => Get.snackbar('打印', '正在发送打印任务...', snackPosition: SnackPosition.BOTTOM),
+            onTap: () => AppToast.show('正在发送打印任务...'),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(

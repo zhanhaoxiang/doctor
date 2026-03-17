@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -100,7 +101,7 @@ class _TopBar extends StatelessWidget {
         children: [
           _IconBtn(
             onTap: () =>
-                Get.snackbar('菜单', '打开菜单', snackPosition: SnackPosition.BOTTOM),
+                AppToast.show('打开菜单'),
             child: const Icon(
               Icons.menu_rounded,
               size: 16,
@@ -470,11 +471,11 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
     final title = _titleCtrl.text.trim();
     final body = _bodyCtrl.text.trim();
     if (title.isEmpty) {
-      Get.snackbar('提示', '请填写提醒标题', snackPosition: SnackPosition.BOTTOM);
+      AppToast.show('请填写提醒标题');
       return;
     }
     if (body.isEmpty) {
-      Get.snackbar('提示', '请填写提醒内容', snackPosition: SnackPosition.BOTTOM);
+      AppToast.show('请填写提醒内容');
       return;
     }
     setState(() => _saving = true);
@@ -482,7 +483,7 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
       await widget.onSave(title, body, _remindAt, _selectedMemberId);
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
-      Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
+      AppToast.error('保存失败：$error');
     } finally {
       if (mounted) setState(() => _saving = false);
     }

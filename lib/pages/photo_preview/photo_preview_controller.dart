@@ -2,6 +2,7 @@ import 'package:doctor/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../core/utils/app_toast.dart';
 import '../../routes/app_routes.dart';
 import '../../services/ark_recognition_service.dart';
 
@@ -39,14 +40,7 @@ class PhotoPreviewController extends GetxController {
     } catch (e) {
       isRecognizing.value = false;
       logger.i('Recognition error: $e');
-      Get.snackbar(
-        '识别失败',
-        '无法连接识别服务，请检查网络后重试',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.black87,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
-      );
+      AppToast.error('识别失败，无法连接识别服务，请检查网络后重试');
     }
   }
 

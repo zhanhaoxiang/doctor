@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -90,7 +91,7 @@ class SettingsPage extends StatelessWidget {
         children: [
           _IconBtn(
             onTap: () =>
-                Get.snackbar('菜单', '打开菜单', snackPosition: SnackPosition.BOTTOM),
+                AppToast.show('打开菜单'),
             child: const Icon(
               Icons.menu_rounded,
               size: 16,
@@ -226,11 +227,7 @@ class _SettingsRow extends StatelessWidget {
     if (item.route != null) {
       Get.toNamed(item.route!);
     } else {
-      Get.snackbar(
-        '提示',
-        '${item.label} - coming soon',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      AppToast.show('${item.label} - coming soon');
     }
   }
 

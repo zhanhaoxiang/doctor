@@ -1,3 +1,4 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:doctor/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -153,13 +154,13 @@ class EditController extends GetxController {
   Future<void> save() async {
     if (isSaving.value) return;
     if (hospitalCtrl.text.trim().isEmpty || visitDateCtrl.text.trim().isEmpty) {
-      Get.snackbar('提示', '请至少填写医院和就诊日期', snackPosition: SnackPosition.BOTTOM);
+      AppToast.show('请至少填写医院和就诊日期');
       return;
     }
 
     final visitDate = DateTime.tryParse(visitDateCtrl.text.trim());
     if (visitDate == null) {
-      Get.snackbar('提示', '就诊日期格式不正确', snackPosition: SnackPosition.BOTTOM);
+      AppToast.show('就诊日期格式不正确');
       return;
     }
     logger.i(
@@ -182,19 +183,13 @@ class EditController extends GetxController {
       );
       historyHospitals.assignAll(await _repository.loadHospitalHistory());
       historyDepartments.assignAll(await _repository.loadDepartmentHistory());
-      Get.snackbar(
-        '已保存',
-        '病历已写入本地数据库',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF2DBD6E),
-        colorText: Colors.white,
-      );
+      AppToast.success('病历已写入本地数据库');
       logger.i('保存成功');
       Get.back();
     } catch (error) {
-      logger.i('保存失败， ${error}');
+      logger.i('保存失败， $error');
       logger.e(error.toString(), error: error);
-      Get.snackbar('保存失败', '$error', snackPosition: SnackPosition.BOTTOM);
+      AppToast.error('保存失败：$error');
     } finally {
       isSaving.value = false;
     }

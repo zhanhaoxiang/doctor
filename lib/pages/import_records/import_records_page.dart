@@ -1,5 +1,5 @@
+import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_page.dart';
 
@@ -11,7 +11,7 @@ class ImportRecordsPage extends StatelessWidget {
     return CommonPage(
       title: '数据导入',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar('导入', '新建导入任务', snackPosition: SnackPosition.BOTTOM),
+        onTap: () => AppToast.show('新建导入任务'),
         child: Container(
           width: 32, height: 32,
           decoration: BoxDecoration(
@@ -32,11 +32,11 @@ class ImportRecordsPage extends StatelessWidget {
                 buttons: [
                   _ImportBtn(
                     label: '扫码导入',
-                    onTap: () => Get.snackbar('扫码', '扫码导入', snackPosition: SnackPosition.BOTTOM),
+                    onTap: () => AppToast.show('扫码导入'),
                   ),
                   _ImportBtn(
                     label: '文件导入',
-                    onTap: () => Get.snackbar('文件', '选择文件', snackPosition: SnackPosition.BOTTOM),
+                    onTap: () => AppToast.show('选择文件'),
                   ),
                 ],
               ),
@@ -47,7 +47,7 @@ class ImportRecordsPage extends StatelessWidget {
                 buttons: [
                   _ImportBtn(
                     label: '选择文件',
-                    onTap: () => Get.snackbar('选择文件', '打开文件选择器', snackPosition: SnackPosition.BOTTOM),
+                    onTap: () => AppToast.show('打开文件选择器'),
                   ),
                 ],
               ),

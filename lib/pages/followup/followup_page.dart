@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/app_toast.dart';
 import '../../core/widgets/common_page.dart';
 import '../../data/models/followup_plan.dart';
 import 'followup_controller.dart';
@@ -14,11 +15,7 @@ class FollowupPage extends GetView<FollowupController> {
     return CommonPage(
       title: '复诊计划',
       trailing: GestureDetector(
-        onTap: () => Get.snackbar(
-          '提示',
-          '复诊计划会根据数据库中的就诊安排自动展示',
-          snackPosition: SnackPosition.BOTTOM,
-        ),
+        onTap: () => AppToast.show('复诊计划会根据数据库中的就诊安排自动展示'),
         child: Container(
           width: 32,
           height: 32,
