@@ -72,6 +72,8 @@ class Reminders extends Table {
   DateTimeColumn get remindAt => dateTime()();
   TextColumn get type => text().withDefault(const Constant('general'))();
   TextColumn get memberId => text().nullable().references(Members, #id)();
+  // 关联病历记录（复诊提醒时使用）
+  TextColumn get recordId => text().nullable().references(MedicalRecords, #id)();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
 
@@ -123,5 +125,14 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(reminders, reminders.recordId);
+      }
+    },
+  );
 }

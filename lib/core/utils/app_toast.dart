@@ -37,7 +37,7 @@ class AppToast {
   }
 }
 
-enum _ToastType { info, success, error
+enum _ToastType { info, success, error }
 
 class _ToastWidget extends StatelessWidget {
   const _ToastWidget({required this.message, required this.type});

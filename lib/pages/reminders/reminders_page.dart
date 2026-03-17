@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/calendar_dialog.dart';
 import '../../data/models/app_reminder.dart';
+import '../../data/models/family_member.dart';
 import 'reminders_controller.dart';
 
 class RemindersPage extends GetView<RemindersController> {
@@ -25,40 +26,62 @@ class RemindersPage extends GetView<RemindersController> {
           ),
           Expanded(
             child: Obx(() {
-              final today = controller.remindersForDay(DateTime.now());
-              final tomorrow = controller.remindersForDay(
-                DateTime.now().add(const Duration(days: 1)),
-              );
+              final now = DateTime.now();
+              final today = controller.remindersForDay(now);
+              final upcoming = controller.reminders
+                  .where((r) =>
+                      r.remindAt.isAfter(DateTime(now.year, now.month, now.day + 1)) &&
+                      r.remindAt.isBefore(now.add(const Duration(days: 30))))
+                  .toList();
+              final history = controller.reminders
+                  .where((r) => r.remindAt
+                      .isBefore(DateTime(now.year, now.month, now.day)))
+                  .toList()
+                  .reversed
+                  .toList();
+
+              final hasAny = today.isNotEmpty || upcoming.isNotEmpty || history.isNotEmpty;
+
               return CustomScrollView(
                 physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
                 slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: _SectionHeader(title: '今天', count: today.length),
-                    ),
-                  ),
-                  _ReminderList(items: today),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: _SectionHeader(
-                        title: '明天',
-                        count: tomorrow.length,
-                      ),
-                    ),
-                  ),
-                  _ReminderList(items: tomorrow),
-                  if (today.isEmpty && tomorrow.isEmpty)
+                  if (!hasAny)
                     const SliverPadding(
                       padding: EdgeInsets.all(16),
                       sliver: SliverToBoxAdapter(
                         child: _EmptyCard(label: '暂无提醒，点击右上角添加'),
                       ),
                     ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                  if (today.isNotEmpty) ...[
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _SectionHeader(title: '今天', count: today.length),
+                      ),
+                    ),
+                    _ReminderList(items: today),
+                  ],
+                  if (upcoming.isNotEmpty) ...[
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _SectionHeader(title: '即将到来', count: upcoming.length),
+                      ),
+                    ),
+                    _ReminderList(items: upcoming),
+                  ],
+                  if (history.isNotEmpty) ...[
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: _SectionHeader(title: '历史记录', count: history.length),
+                      ),
+                    ),
+                    _ReminderList(items: history, dimmed: true),
+                  ],
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
               );
             }),
@@ -174,9 +197,10 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _ReminderList extends StatelessWidget {
-  const _ReminderList({required this.items});
+  const _ReminderList({required this.items, this.dimmed = false});
 
   final List<AppReminder> items;
+  final bool dimmed;
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +210,7 @@ class _ReminderList extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (_, index) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _ReminderCard(item: items[index]),
+            child: _ReminderCard(item: items[index], dimmed: dimmed),
           ),
           childCount: items.length,
         ),
@@ -196,14 +220,18 @@ class _ReminderList extends StatelessWidget {
 }
 
 class _ReminderCard extends StatelessWidget {
-  const _ReminderCard({required this.item});
+  const _ReminderCard({required this.item, this.dimmed = false});
 
   final AppReminder item;
+  final bool dimmed;
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = dimmed ? const Color(0xFFF9F9F9) : Colors.white;
+    final titleColor = dimmed ? AppColors.ink3 : AppColors.ink1;
+
     return Material(
-      color: Colors.white,
+      color: cardColor,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -211,37 +239,95 @@ class _ReminderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.line),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(
-              item.title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppColors.ink1,
+            // 类型图标
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: item.isFollowup
+                    ? AppColors.accentLight
+                    : const Color(0xFFF0F0F5),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                item.isFollowup
+                    ? Icons.event_available_rounded
+                    : Icons.notifications_outlined,
+                size: 18,
+                color: item.isFollowup ? AppColors.accent : AppColors.ink3,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              item.body,
-              style: const TextStyle(fontSize: 12, color: AppColors.ink2),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: titleColor,
+                    ),
+                  ),
+                  if (item.body.isNotEmpty && item.body != '下次复诊提醒') ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      item.body,
+                      style: const TextStyle(fontSize: 12, color: AppColors.ink3),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: 11,
+                        color: dimmed ? AppColors.ink3.withValues(alpha: 0.5) : AppColors.ink3,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        item.dateText,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: dimmed ? AppColors.ink3.withValues(alpha: 0.5) : AppColors.ink3,
+                        ),
+                      ),
+                      if (item.memberName != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          item.memberName!,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.ink3,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(
-                  Icons.access_time_rounded,
-                  size: 12,
-                  color: AppColors.ink3,
+            if (item.isFollowup)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.accentLight,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  item.timeText,
-                  style: const TextStyle(fontSize: 11, color: AppColors.ink3),
+                child: const Text(
+                  '复诊',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
@@ -312,7 +398,7 @@ class _CreateReminderSheet extends StatefulWidget {
     required this.onSave,
   });
 
-  final List<dynamic> members;
+  final List<FamilyMember> members;
   final _SaveCallback onSave;
 
   @override
@@ -329,9 +415,11 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
   @override
   void initState() {
     super.initState();
-    _remindAt = DateTime.now().add(const Duration(hours: 1));
+    // 默认明天
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    _remindAt = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
     if (widget.members.isNotEmpty) {
-      _selectedMemberId = (widget.members.first as dynamic).id as String?;
+      _selectedMemberId = widget.members.first.id;
     }
   }
 
@@ -342,129 +430,45 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
     super.dispose();
   }
 
-  String _formatDateTime(DateTime dt) {
+  String _formatDate(DateTime dt) {
     final y = dt.year;
     final mo = dt.month.toString().padLeft(2, '0');
     final d = dt.day.toString().padLeft(2, '0');
-    final h = dt.hour.toString().padLeft(2, '0');
-    final mi = dt.minute.toString().padLeft(2, '0');
-    return '$y-$mo-$d  $h:$mi';
+    return '$y-$mo-$d';
   }
 
-  Future<void> _pickDateTime() async {
-    // 先选日期（使用日历弹窗）
+  String get _selectedMemberName {
+    if (_selectedMemberId == null) return '不指定';
+    final match = widget.members.where((m) => m.id == _selectedMemberId).toList();
+    return match.isNotEmpty ? match.first.name : '不指定';
+  }
+
+  Future<void> _pickDate() async {
     final date = await showCalendarDialog(
       context: context,
       initialDate: _remindAt,
-      minimumDate: DateTime.now().subtract(const Duration(days: 1)),
-      maximumDate: DateTime.now().add(const Duration(days: 365)),
+      minimumDate: DateTime.now().subtract(const Duration(days: 365)),
+      maximumDate: DateTime.now().add(const Duration(days: 365 * 2)),
     );
     if (date == null || !mounted) return;
+    setState(() {
+      _remindAt = DateTime(date.year, date.month, date.day, 9, 0);
+    });
+  }
 
-    // 再选时间（CupertinoDatePicker time 模式）
-    DateTime picked = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      _remindAt.hour,
-      _remindAt.minute,
-    );
-
-    final confirmed = await showCupertinoModalPopup<bool>(
+  Future<void> _pickMember() async {
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF9F9F9),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD1D1D6),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(6, 4, 6, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      child: const Text(
-                        '取消',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF8A8A8F),
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      '选择时间',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1C1C1E),
-                      ),
-                    ),
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      child: Text(
-                        '完成',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 180,
-                child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.time,
-                  use24hFormat: true,
-                  initialDateTime: picked,
-                  onDateTimeChanged: (dt) {
-                    picked = DateTime(
-                      date.year,
-                      date.month,
-                      date.day,
-                      dt.hour,
-                      dt.minute,
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _MemberPickerSheet(
+        members: widget.members,
+        selectedId: _selectedMemberId,
+        onSelect: (id) {
+          setState(() => _selectedMemberId = id);
+          Navigator.of(ctx).pop();
+        },
       ),
     );
-
-    if (confirmed == true && mounted) {
-      setState(() => _remindAt = picked);
-    }
   }
 
   Future<void> _save() async {
@@ -472,10 +476,6 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
     final body = _bodyCtrl.text.trim();
     if (title.isEmpty) {
       AppToast.show('请填写提醒标题');
-      return;
-    }
-    if (body.isEmpty) {
-      AppToast.show('请填写提醒内容');
       return;
     }
     setState(() => _saving = true);
@@ -503,7 +503,7 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 拖动条 + 顶部栏
+            // 拖动条
             Padding(
               padding: const EdgeInsets.only(top: 10, bottom: 4),
               child: Container(
@@ -515,23 +515,18 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
                 ),
               ),
             ),
+            // 顶部导航栏
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CupertinoButton(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text(
                       '取消',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF8A8A8F),
-                      ),
+                      style: TextStyle(fontSize: 16, color: Color(0xFF8A8A8F)),
                     ),
                   ),
                   const Text(
@@ -543,10 +538,7 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
                     ),
                   ),
                   CupertinoButton(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     onPressed: _saving ? null : _save,
                     child: _saving
                         ? const CupertinoActivityIndicator()
@@ -562,7 +554,7 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
                 ],
               ),
             ),
-            // 表单区
+            // 表单
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
@@ -577,21 +569,22 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
                       ),
                       const _Divider(),
                       _FormField(
-                        label: '内容',
+                        label: '备注',
                         controller: _bodyCtrl,
-                        hint: '提醒内容',
+                        hint: '可选，备注信息',
                         minLines: 2,
                         maxLines: 4,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // 时间 & 成员
+                  // 日期 & 成员
                   _FormCard(
                     children: [
+                      // 提醒日期
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: _pickDateTime,
+                        onTap: _pickDate,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
@@ -599,24 +592,33 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
                           ),
                           child: Row(
                             children: [
-                              const SizedBox(
-                                width: 64,
-                                child: Text(
-                                  '提醒时间',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF8A8A8F),
-                                  ),
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF9F0A),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.calendar_today_rounded,
+                                  size: 14,
+                                  color: Colors.white,
                                 ),
                               ),
-                              Expanded(
-                                child: Text(
-                                  _formatDateTime(_remindAt),
-                                  textAlign: TextAlign.right,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF1C1C1E),
-                                  ),
+                              const SizedBox(width: 10),
+                              const Text(
+                                '提醒日期',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF1C1C1E),
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                _formatDate(_remindAt),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF8A8A8F),
                                 ),
                               ),
                               const SizedBox(width: 4),
@@ -630,63 +632,55 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
                         ),
                       ),
                       if (widget.members.isNotEmpty) ...[
-                        const _Divider(),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 4,
-                          ),
-                          child: Row(
-                            children: [
-                              const SizedBox(
-                                width: 64,
-                                child: Text(
-                                  '成员',
+                        const _Divider(indent: 52),
+                        // 成员选择
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: _pickMember,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 13,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accent,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.person_rounded,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  '提醒成员',
                                   style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF1C1C1E),
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  _selectedMemberName,
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     color: Color(0xFF8A8A8F),
                                   ),
                                 ),
-                              ),
-                              Expanded(
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String?>(
-                                    value: _selectedMemberId,
-                                    alignment: Alignment.centerRight,
-                                    icon: const Icon(
-                                      Icons.expand_more_rounded,
-                                      size: 18,
-                                      color: Color(0xFFC7C7CC),
-                                    ),
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF1C1C1E),
-                                    ),
-                                    items: [
-                                      const DropdownMenuItem<String?>(
-                                        value: null,
-                                        child: Text(
-                                          '不指定成员',
-                                          style: TextStyle(
-                                            color: Color(0xFF8A8A8F),
-                                          ),
-                                        ),
-                                      ),
-                                      ...widget.members.map(
-                                        (m) => DropdownMenuItem<String?>(
-                                          value: (m as dynamic).id as String?,
-                                          child: Text(
-                                            (m as dynamic).name as String,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    onChanged: (v) =>
-                                        setState(() => _selectedMemberId = v),
-                                  ),
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 16,
+                                  color: Color(0xFFC7C7CC),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -695,6 +689,166 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── iOS 风格成员选择器 ────────────────────────────────────────────────────────
+
+class _MemberPickerSheet extends StatelessWidget {
+  const _MemberPickerSheet({
+    required this.members,
+    required this.selectedId,
+    required this.onSelect,
+  });
+
+  final List<FamilyMember> members;
+  final String? selectedId;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF2F2F7),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 拖动条
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1D1D6),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const Text(
+              '选择成员',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1C1C1E),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // 成员列表
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 不指定选项
+                  _MemberTile(
+                    name: '不指定',
+                    avatarColor: const Color(0xFFD1D1D6),
+                    initial: '—',
+                    isSelected: selectedId == null,
+                    onTap: () => onSelect(null),
+                  ),
+                  ...List.generate(members.length, (i) {
+                    final m = members[i];
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          height: 0.5,
+                          color: const Color(0x1A000000),
+                          margin: const EdgeInsets.only(left: 60),
+                        ),
+                        _MemberTile(
+                          name: m.name,
+                          avatarColor: m.accentColor,
+                          initial: m.name.isNotEmpty ? m.name[0] : '?',
+                          isSelected: selectedId == m.id,
+                          onTap: () => onSelect(m.id),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MemberTile extends StatelessWidget {
+  const _MemberTile({
+    required this.name,
+    required this.avatarColor,
+    required this.initial,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String name;
+  final Color avatarColor;
+  final String initial;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: avatarColor.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: initial == '—'
+                        ? const Color(0xFF8A8A8F)
+                        : avatarColor,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              name,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF1C1C1E),
+              ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              Icon(
+                Icons.check_rounded,
+                size: 20,
+                color: AppColors.accent,
+              ),
           ],
         ),
       ),
@@ -779,10 +933,16 @@ class _FormField extends StatelessWidget {
 }
 
 class _Divider extends StatelessWidget {
-  const _Divider();
+  const _Divider({this.indent = 78});
+
+  final double indent;
 
   @override
   Widget build(BuildContext context) {
-    return Container(height: 0.5, color: const Color(0x1A000000), margin: const EdgeInsets.only(left: 78));
+    return Container(
+      height: 0.5,
+      color: const Color(0x1A000000),
+      margin: EdgeInsets.only(left: indent),
+    );
   }
 }

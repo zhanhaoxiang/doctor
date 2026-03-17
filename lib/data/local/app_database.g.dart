@@ -2345,6 +2345,20 @@ class $RemindersTable extends Reminders
       'REFERENCES members (id)',
     ),
   );
+  static const VerificationMeta _recordIdMeta = const VerificationMeta(
+    'recordId',
+  );
+  @override
+  late final GeneratedColumn<String> recordId = GeneratedColumn<String>(
+    'record_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES medical_records (id)',
+    ),
+  );
   static const VerificationMeta _isCompletedMeta = const VerificationMeta(
     'isCompleted',
   );
@@ -2379,6 +2393,7 @@ class $RemindersTable extends Reminders
     remindAt,
     type,
     memberId,
+    recordId,
     isCompleted,
     createdAt,
   ];
@@ -2435,6 +2450,12 @@ class $RemindersTable extends Reminders
         memberId.isAcceptableOrUnknown(data['member_id']!, _memberIdMeta),
       );
     }
+    if (data.containsKey('record_id')) {
+      context.handle(
+        _recordIdMeta,
+        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
+      );
+    }
     if (data.containsKey('is_completed')) {
       context.handle(
         _isCompletedMeta,
@@ -2485,6 +2506,10 @@ class $RemindersTable extends Reminders
         DriftSqlType.string,
         data['${effectivePrefix}member_id'],
       ),
+      recordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}record_id'],
+      ),
       isCompleted: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_completed'],
@@ -2509,6 +2534,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   final DateTime remindAt;
   final String type;
   final String? memberId;
+  final String? recordId;
   final bool isCompleted;
   final DateTime createdAt;
   const Reminder({
@@ -2518,6 +2544,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     required this.remindAt,
     required this.type,
     this.memberId,
+    this.recordId,
     required this.isCompleted,
     required this.createdAt,
   });
@@ -2531,6 +2558,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || memberId != null) {
       map['member_id'] = Variable<String>(memberId);
+    }
+    if (!nullToAbsent || recordId != null) {
+      map['record_id'] = Variable<String>(recordId);
     }
     map['is_completed'] = Variable<bool>(isCompleted);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -2547,6 +2577,9 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       memberId: memberId == null && nullToAbsent
           ? const Value.absent()
           : Value(memberId),
+      recordId: recordId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recordId),
       isCompleted: Value(isCompleted),
       createdAt: Value(createdAt),
     );
@@ -2564,6 +2597,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       remindAt: serializer.fromJson<DateTime>(json['remindAt']),
       type: serializer.fromJson<String>(json['type']),
       memberId: serializer.fromJson<String?>(json['memberId']),
+      recordId: serializer.fromJson<String?>(json['recordId']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -2578,6 +2612,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       'remindAt': serializer.toJson<DateTime>(remindAt),
       'type': serializer.toJson<String>(type),
       'memberId': serializer.toJson<String?>(memberId),
+      'recordId': serializer.toJson<String?>(recordId),
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -2590,6 +2625,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     DateTime? remindAt,
     String? type,
     Value<String?> memberId = const Value.absent(),
+    Value<String?> recordId = const Value.absent(),
     bool? isCompleted,
     DateTime? createdAt,
   }) => Reminder(
@@ -2599,6 +2635,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     remindAt: remindAt ?? this.remindAt,
     type: type ?? this.type,
     memberId: memberId.present ? memberId.value : this.memberId,
+    recordId: recordId.present ? recordId.value : this.recordId,
     isCompleted: isCompleted ?? this.isCompleted,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -2610,6 +2647,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       remindAt: data.remindAt.present ? data.remindAt.value : this.remindAt,
       type: data.type.present ? data.type.value : this.type,
       memberId: data.memberId.present ? data.memberId.value : this.memberId,
+      recordId: data.recordId.present ? data.recordId.value : this.recordId,
       isCompleted: data.isCompleted.present
           ? data.isCompleted.value
           : this.isCompleted,
@@ -2626,6 +2664,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ..write('remindAt: $remindAt, ')
           ..write('type: $type, ')
           ..write('memberId: $memberId, ')
+          ..write('recordId: $recordId, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -2640,6 +2679,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     remindAt,
     type,
     memberId,
+    recordId,
     isCompleted,
     createdAt,
   );
@@ -2653,6 +2693,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           other.remindAt == this.remindAt &&
           other.type == this.type &&
           other.memberId == this.memberId &&
+          other.recordId == this.recordId &&
           other.isCompleted == this.isCompleted &&
           other.createdAt == this.createdAt);
 }
@@ -2664,6 +2705,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<DateTime> remindAt;
   final Value<String> type;
   final Value<String?> memberId;
+  final Value<String?> recordId;
   final Value<bool> isCompleted;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -2674,6 +2716,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.remindAt = const Value.absent(),
     this.type = const Value.absent(),
     this.memberId = const Value.absent(),
+    this.recordId = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2685,6 +2728,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     required DateTime remindAt,
     this.type = const Value.absent(),
     this.memberId = const Value.absent(),
+    this.recordId = const Value.absent(),
     this.isCompleted = const Value.absent(),
     required DateTime createdAt,
     this.rowid = const Value.absent(),
@@ -2700,6 +2744,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Expression<DateTime>? remindAt,
     Expression<String>? type,
     Expression<String>? memberId,
+    Expression<String>? recordId,
     Expression<bool>? isCompleted,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -2711,6 +2756,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       if (remindAt != null) 'remind_at': remindAt,
       if (type != null) 'type': type,
       if (memberId != null) 'member_id': memberId,
+      if (recordId != null) 'record_id': recordId,
       if (isCompleted != null) 'is_completed': isCompleted,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -2724,6 +2770,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Value<DateTime>? remindAt,
     Value<String>? type,
     Value<String?>? memberId,
+    Value<String?>? recordId,
     Value<bool>? isCompleted,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -2735,6 +2782,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       remindAt: remindAt ?? this.remindAt,
       type: type ?? this.type,
       memberId: memberId ?? this.memberId,
+      recordId: recordId ?? this.recordId,
       isCompleted: isCompleted ?? this.isCompleted,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -2762,6 +2810,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (memberId.present) {
       map['member_id'] = Variable<String>(memberId.value);
     }
+    if (recordId.present) {
+      map['record_id'] = Variable<String>(recordId.value);
+    }
     if (isCompleted.present) {
       map['is_completed'] = Variable<bool>(isCompleted.value);
     }
@@ -2783,6 +2834,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
           ..write('remindAt: $remindAt, ')
           ..write('type: $type, ')
           ..write('memberId: $memberId, ')
+          ..write('recordId: $recordId, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -4780,6 +4832,27 @@ final class $$MedicalRecordsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$RemindersTable, List<Reminder>>
+  _remindersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.reminders,
+    aliasName: $_aliasNameGenerator(
+      db.medicalRecords.id,
+      db.reminders.recordId,
+    ),
+  );
+
+  $$RemindersTableProcessedTableManager get remindersRefs {
+    final manager = $$RemindersTableTableManager(
+      $_db,
+      $_db.reminders,
+    ).filter((f) => f.recordId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_remindersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$MedicalRecordsTableFilterComposer
@@ -4915,6 +4988,31 @@ class $$MedicalRecordsTableFilterComposer
           }) => $$RecordAttachmentsTableFilterComposer(
             $db: $db,
             $table: $db.recordAttachments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> remindersRefs(
+    Expression<bool> Function($$RemindersTableFilterComposer f) f,
+  ) {
+    final $$RemindersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.reminders,
+      getReferencedColumn: (t) => t.recordId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RemindersTableFilterComposer(
+            $db: $db,
+            $table: $db.reminders,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5144,6 +5242,31 @@ class $$MedicalRecordsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> remindersRefs<T extends Object>(
+    Expression<T> Function($$RemindersTableAnnotationComposer a) f,
+  ) {
+    final $$RemindersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.reminders,
+      getReferencedColumn: (t) => t.recordId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RemindersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.reminders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$MedicalRecordsTableTableManager
@@ -5163,6 +5286,7 @@ class $$MedicalRecordsTableTableManager
             bool memberId,
             bool recordTagLinksRefs,
             bool recordAttachmentsRefs,
+            bool remindersRefs,
           })
         > {
   $$MedicalRecordsTableTableManager(
@@ -5255,12 +5379,14 @@ class $$MedicalRecordsTableTableManager
                 memberId = false,
                 recordTagLinksRefs = false,
                 recordAttachmentsRefs = false,
+                remindersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (recordTagLinksRefs) db.recordTagLinks,
                     if (recordAttachmentsRefs) db.recordAttachments,
+                    if (remindersRefs) db.reminders,
                   ],
                   addJoins:
                       <
@@ -5340,6 +5466,27 @@ class $$MedicalRecordsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (remindersRefs)
+                        await $_getPrefetchedData<
+                          MedicalRecord,
+                          $MedicalRecordsTable,
+                          Reminder
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MedicalRecordsTableReferences
+                              ._remindersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MedicalRecordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).remindersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.recordId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -5364,6 +5511,7 @@ typedef $$MedicalRecordsTableProcessedTableManager =
         bool memberId,
         bool recordTagLinksRefs,
         bool recordAttachmentsRefs,
+        bool remindersRefs,
       })
     >;
 typedef $$RecordTagLinksTableCreateCompanionBuilder =
@@ -6101,6 +6249,7 @@ typedef $$RemindersTableCreateCompanionBuilder =
       required DateTime remindAt,
       Value<String> type,
       Value<String?> memberId,
+      Value<String?> recordId,
       Value<bool> isCompleted,
       required DateTime createdAt,
       Value<int> rowid,
@@ -6113,6 +6262,7 @@ typedef $$RemindersTableUpdateCompanionBuilder =
       Value<DateTime> remindAt,
       Value<String> type,
       Value<String?> memberId,
+      Value<String?> recordId,
       Value<bool> isCompleted,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -6133,6 +6283,25 @@ final class $$RemindersTableReferences
       $_db.members,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_memberIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $MedicalRecordsTable _recordIdTable(_$AppDatabase db) =>
+      db.medicalRecords.createAlias(
+        $_aliasNameGenerator(db.reminders.recordId, db.medicalRecords.id),
+      );
+
+  $$MedicalRecordsTableProcessedTableManager? get recordId {
+    final $_column = $_itemColumn<String>('record_id');
+    if ($_column == null) return null;
+    final manager = $$MedicalRecordsTableTableManager(
+      $_db,
+      $_db.medicalRecords,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_recordIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -6198,6 +6367,29 @@ class $$RemindersTableFilterComposer
           }) => $$MembersTableFilterComposer(
             $db: $db,
             $table: $db.members,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$MedicalRecordsTableFilterComposer get recordId {
+    final $$MedicalRecordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.recordId,
+      referencedTable: $db.medicalRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicalRecordsTableFilterComposer(
+            $db: $db,
+            $table: $db.medicalRecords,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6274,6 +6466,29 @@ class $$RemindersTableOrderingComposer
     );
     return composer;
   }
+
+  $$MedicalRecordsTableOrderingComposer get recordId {
+    final $$MedicalRecordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.recordId,
+      referencedTable: $db.medicalRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicalRecordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.medicalRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$RemindersTableAnnotationComposer
@@ -6330,6 +6545,29 @@ class $$RemindersTableAnnotationComposer
     );
     return composer;
   }
+
+  $$MedicalRecordsTableAnnotationComposer get recordId {
+    final $$MedicalRecordsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.recordId,
+      referencedTable: $db.medicalRecords,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MedicalRecordsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.medicalRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$RemindersTableTableManager
@@ -6345,7 +6583,7 @@ class $$RemindersTableTableManager
           $$RemindersTableUpdateCompanionBuilder,
           (Reminder, $$RemindersTableReferences),
           Reminder,
-          PrefetchHooks Function({bool memberId})
+          PrefetchHooks Function({bool memberId, bool recordId})
         > {
   $$RemindersTableTableManager(_$AppDatabase db, $RemindersTable table)
     : super(
@@ -6366,6 +6604,7 @@ class $$RemindersTableTableManager
                 Value<DateTime> remindAt = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<String?> memberId = const Value.absent(),
+                Value<String?> recordId = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -6376,6 +6615,7 @@ class $$RemindersTableTableManager
                 remindAt: remindAt,
                 type: type,
                 memberId: memberId,
+                recordId: recordId,
                 isCompleted: isCompleted,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -6388,6 +6628,7 @@ class $$RemindersTableTableManager
                 required DateTime remindAt,
                 Value<String> type = const Value.absent(),
                 Value<String?> memberId = const Value.absent(),
+                Value<String?> recordId = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 required DateTime createdAt,
                 Value<int> rowid = const Value.absent(),
@@ -6398,6 +6639,7 @@ class $$RemindersTableTableManager
                 remindAt: remindAt,
                 type: type,
                 memberId: memberId,
+                recordId: recordId,
                 isCompleted: isCompleted,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -6410,7 +6652,7 @@ class $$RemindersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({memberId = false}) {
+          prefetchHooksCallback: ({memberId = false, recordId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -6443,6 +6685,19 @@ class $$RemindersTableTableManager
                               )
                               as T;
                     }
+                    if (recordId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.recordId,
+                                referencedTable: $$RemindersTableReferences
+                                    ._recordIdTable(db),
+                                referencedColumn: $$RemindersTableReferences
+                                    ._recordIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
 
                     return state;
                   },
@@ -6467,7 +6722,7 @@ typedef $$RemindersTableProcessedTableManager =
       $$RemindersTableUpdateCompanionBuilder,
       (Reminder, $$RemindersTableReferences),
       Reminder,
-      PrefetchHooks Function({bool memberId})
+      PrefetchHooks Function({bool memberId, bool recordId})
     >;
 typedef $$FollowupsTableCreateCompanionBuilder =
     FollowupsCompanion Function({

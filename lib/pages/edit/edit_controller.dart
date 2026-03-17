@@ -28,6 +28,7 @@ class EditController extends GetxController {
   final historyHospitals = <String>[].obs;
   final historyDepartments = <String>[].obs;
   final selectedMemberId = RxnString();
+  final followupDate = Rxn<DateTime>();
   final isSaving = false.obs;
 
   final _picker = ImagePicker();
@@ -76,6 +77,8 @@ class EditController extends GetxController {
     summaryCtrl.text = record.aiSummary;
     attachments.assignAll(record.attachments);
     selectedMemberId.value = record.familyMemberId;
+    // 加载已有的复诊提醒日期
+    followupDate.value = await _repository.getFollowupReminderDate(id);
   }
 
   void _fillFromRecognition(RecognitionResult? result, List<String>? imagePaths) {
@@ -136,6 +139,23 @@ class EditController extends GetxController {
     );
   }
 
+  Future<void> pickFollowupDate(BuildContext context) async {
+    final picked = await showCalendarDialog(
+      context: context,
+      initialDate: followupDate.value,
+      minimumDate: DateTime.now(),
+    );
+    if (picked != null) followupDate.value = picked;
+  }
+
+  void clearFollowupDate() => followupDate.value = null;
+
+  String get followupDateLabel {
+    final d = followupDate.value;
+    if (d == null) return '不设置';
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  }
+
   Future<void> pickDate(BuildContext context) async {
     DateTime? initial;
     try {
@@ -180,6 +200,7 @@ class EditController extends GetxController {
         doctorOrder: prescriptionCtrl.text,
         memberId: selectedMemberId.value,
         attachments: attachments.toList(),
+        followupDate: followupDate.value,
       );
       historyHospitals.assignAll(await _repository.loadHospitalHistory());
       historyDepartments.assignAll(await _repository.loadDepartmentHistory());

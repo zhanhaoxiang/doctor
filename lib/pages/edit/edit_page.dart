@@ -136,6 +136,58 @@ class EditPage extends GetView<EditController> {
             controller: controller.diagnosisCtrl,
             hint: '请输入诊断结论',
           ),
+          _divider(),
+          // 下次复诊时间
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => controller.pickFollowupDate(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 72,
+                    child: Text(
+                      '下次复诊',
+                      style: TextStyle(fontSize: 13, color: AppColors.ink3),
+                    ),
+                  ),
+                  Expanded(
+                    child: Obx(
+                      () => Text(
+                        controller.followupDateLabel,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: controller.followupDate.value != null
+                              ? AppColors.accent
+                              : AppColors.ink3.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Obx(
+                    () => controller.followupDate.value != null
+                        ? GestureDetector(
+                            onTap: controller.clearFollowupDate,
+                            child: const Padding(
+                              padding: EdgeInsets.only(left: 4),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 14,
+                                color: AppColors.ink3,
+                              ),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.chevron_right_rounded,
+                            size: 16,
+                            color: AppColors.ink3,
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

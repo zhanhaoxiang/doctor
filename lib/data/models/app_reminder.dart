@@ -7,6 +7,7 @@ class AppReminder {
     required this.type,
     this.memberId,
     this.memberName,
+    this.recordId,
   });
 
   final String id;
@@ -16,6 +17,17 @@ class AppReminder {
   final String type;
   final String? memberId;
   final String? memberName;
+  // 关联病历（复诊提醒时有值）
+  final String? recordId;
+
+  bool get isFollowup => type == 'followup';
+
+  String get dateText {
+    final y = remindAt.year;
+    final mo = remindAt.month.toString().padLeft(2, '0');
+    final d = remindAt.day.toString().padLeft(2, '0');
+    return '$y-$mo-$d';
+  }
 
   String get timeText {
     final h = remindAt.hour.toString().padLeft(2, '0');

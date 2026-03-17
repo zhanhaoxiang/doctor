@@ -212,17 +212,25 @@ class LocalDataRepository extends GetxService {
   }
 
   Stream<NextAppointment?> watchNextAppointment() {
+    // 优先从复诊提醒（type=followup）中读取，再 fallback 到 followups 表
     return _db
         .customSelect(
           '''
+          SELECT title AS hospital, body AS department, remind_at AS scheduled_at
+            FROM reminders
+           WHERE type = 'followup' AND remind_at >= ?
+           UNION ALL
           SELECT hospital, department, scheduled_at
             FROM followups
            WHERE scheduled_at >= ?
            ORDER BY scheduled_at ASC
            LIMIT 1
           ''',
-          variables: [drift.Variable.withDateTime(DateTime.now())],
-          readsFrom: {_db.followups},
+          variables: [
+            drift.Variable.withDateTime(DateTime.now()),
+            drift.Variable.withDateTime(DateTime.now()),
+          ],
+          readsFrom: {_db.reminders, _db.followups},
         )
         .watch()
         .map((rows) {
@@ -333,6 +341,7 @@ class LocalDataRepository extends GetxService {
                  r.remind_at,
                  r.type,
                  r.member_id,
+                 r.record_id,
                  m.name AS member_name
             FROM reminders r
             LEFT JOIN members m ON m.id = r.member_id
@@ -352,6 +361,7 @@ class LocalDataRepository extends GetxService {
                   type: row.read<String>('type'),
                   memberId: row.data['member_id'] as String?,
                   memberName: row.data['member_name'] as String?,
+                  recordId: row.data['record_id'] as String?,
                 ),
               )
               .toList(),
@@ -514,6 +524,7 @@ class LocalDataRepository extends GetxService {
     required String doctorOrder,
     required String? memberId,
     required List<attachment_model.RecordAttachment> attachments,
+    DateTime? followupDate,
   }) async {
     final now = DateTime.now();
     final normalizedHospital = hospitalName.trim();
@@ -592,6 +603,77 @@ class LocalDataRepository extends GetxService {
         });
       }
     });
+
+    // 处理复诊提醒
+    await upsertFollowupReminder(
+      recordId: resolvedRecordId,
+      followupDate: followupDate,
+      memberId: memberId,
+      hospitalName: normalizedHospital,
+    );
+  }
+
+  /// 创建或更新/删除病历关联的复诊提醒
+  Future<void> upsertFollowupReminder({
+    required String recordId,
+    DateTime? followupDate,
+    String? memberId,
+    String hospitalName = '',
+  }) async {
+    final now = DateTime.now();
+    // 查找已有关联提醒
+    final existing = await (_db.select(_db.reminders)
+          ..where(
+            (r) => r.recordId.equals(recordId) & r.type.equals('followup'),
+          ))
+        .getSingleOrNull();
+
+    if (followupDate == null) {
+      // 没有复诊日期 → 删除已有的
+      if (existing != null) {
+        await (_db.delete(_db.reminders)
+              ..where((r) => r.id.equals(existing.id)))
+            .go();
+      }
+      return;
+    }
+
+    if (existing != null) {
+      // 更新已有提醒
+      await (_db.update(_db.reminders)
+            ..where((r) => r.id.equals(existing.id)))
+          .write(
+            RemindersCompanion(
+              remindAt: drift.Value(followupDate),
+              memberId: drift.Value(memberId),
+              title: drift.Value(hospitalName.isNotEmpty ? hospitalName : existing.title),
+            ),
+          );
+    } else {
+      // 创建新的复诊提醒
+      await _db.into(_db.reminders).insert(
+            RemindersCompanion.insert(
+              id: _newId('reminder'),
+              title: hospitalName.isEmpty ? '下次复诊' : hospitalName,
+              body: '下次复诊提醒',
+              remindAt: followupDate,
+              type: const drift.Value('followup'),
+              memberId: drift.Value(memberId),
+              recordId: drift.Value(recordId),
+              createdAt: now,
+            ),
+          );
+    }
+  }
+
+  /// 获取病历关联的复诊提醒日期
+  Future<DateTime?> getFollowupReminderDate(String recordId) async {
+    final row = await (_db.select(_db.reminders)
+          ..where(
+            (r) => r.recordId.equals(recordId) & r.type.equals('followup'),
+          ))
+        .getSingleOrNull();
+    return row?.remindAt;
   }
 
   Future<void> close() => _db.close();
