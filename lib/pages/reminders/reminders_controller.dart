@@ -47,6 +47,26 @@ class RemindersController extends GetxController {
     );
   }
 
+  Future<void> updateReminder(
+    String id, {
+    required String title,
+    required String body,
+    required DateTime remindAt,
+    String? memberId,
+  }) {
+    return _repository.updateReminder(
+      id,
+      title: title,
+      body: body,
+      remindAt: remindAt,
+      memberId: memberId,
+    );
+  }
+
+  Future<void> deleteReminder(String id) {
+    return _repository.deleteReminder(id);
+  }
+
   @override
   void onClose() {
     _remindersSubscription?.cancel();

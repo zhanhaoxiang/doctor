@@ -61,7 +61,11 @@ class RemindersPage extends GetView<RemindersController> {
                         child: _SectionHeader(title: '今天', count: today.length),
                       ),
                     ),
-                    _ReminderList(items: today),
+                    _ReminderList(
+                      items: today,
+                      onEdit: (item) => _showEditDialog(context, item),
+                      onDelete: (item) => _confirmAndDelete(context, item),
+                    ),
                   ],
                   if (upcoming.isNotEmpty) ...[
                     SliverPadding(
@@ -70,7 +74,11 @@ class RemindersPage extends GetView<RemindersController> {
                         child: _SectionHeader(title: '即将到来', count: upcoming.length),
                       ),
                     ),
-                    _ReminderList(items: upcoming),
+                    _ReminderList(
+                      items: upcoming,
+                      onEdit: (item) => _showEditDialog(context, item),
+                      onDelete: (item) => _confirmAndDelete(context, item),
+                    ),
                   ],
                   if (history.isNotEmpty) ...[
                     SliverPadding(
@@ -79,7 +87,12 @@ class RemindersPage extends GetView<RemindersController> {
                         child: _SectionHeader(title: '历史记录', count: history.length),
                       ),
                     ),
-                    _ReminderList(items: history, dimmed: true),
+                    _ReminderList(
+                      items: history,
+                      dimmed: true,
+                      onEdit: (item) => _showEditDialog(context, item),
+                      onDelete: (item) => _confirmAndDelete(context, item),
+                    ),
                   ],
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
@@ -96,7 +109,7 @@ class RemindersPage extends GetView<RemindersController> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _CreateReminderSheet(
+      builder: (ctx) => _ReminderFormSheet(
         members: controller.members.toList(),
         onSave: (title, body, remindAt, memberId) async {
           await controller.addReminder(
@@ -108,6 +121,52 @@ class RemindersPage extends GetView<RemindersController> {
         },
       ),
     );
+  }
+
+  Future<void> _showEditDialog(BuildContext context, AppReminder item) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _ReminderFormSheet(
+        members: controller.members.toList(),
+        initialReminder: item,
+        onSave: (title, body, remindAt, memberId) async {
+          await controller.updateReminder(
+            item.id,
+            title: title,
+            body: body,
+            remindAt: remindAt,
+            memberId: memberId,
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _confirmAndDelete(BuildContext context, AppReminder item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('删除提醒', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        content: Text('确定要删除「${item.title}」？', style: const TextStyle(fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消', style: TextStyle(color: AppColors.ink3)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('删除', style: TextStyle(color: Color(0xFFFF3B30))),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await controller.deleteReminder(item.id);
+      AppToast.show('已删除');
+    }
   }
 }
 
@@ -196,10 +255,17 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _ReminderList extends StatelessWidget {
-  const _ReminderList({required this.items, this.dimmed = false});
+  const _ReminderList({
+    required this.items,
+    this.dimmed = false,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final List<AppReminder> items;
   final bool dimmed;
+  final void Function(AppReminder) onEdit;
+  final void Function(AppReminder) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +275,12 @@ class _ReminderList extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (_, index) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _ReminderCard(item: items[index], dimmed: dimmed),
+            child: _ReminderCard(
+              item: items[index],
+              dimmed: dimmed,
+              onEdit: () => onEdit(items[index]),
+              onDelete: () => onDelete(items[index]),
+            ),
           ),
           childCount: items.length,
         ),
@@ -219,10 +290,17 @@ class _ReminderList extends StatelessWidget {
 }
 
 class _ReminderCard extends StatelessWidget {
-  const _ReminderCard({required this.item, this.dimmed = false});
+  const _ReminderCard({
+    required this.item,
+    this.dimmed = false,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final AppReminder item;
   final bool dimmed;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -311,22 +389,97 @@ class _ReminderCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (item.isFollowup)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.accentLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  '复诊',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: AppColors.accent,
-                    fontWeight: FontWeight.w600,
+            // 右侧：复诊标签 + 操作菜单
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (item.isFollowup)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentLight,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      '复诊',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.accent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
+                const SizedBox(width: 4),
+                PopupMenuButton<_ReminderAction>(
+                  onSelected: (action) {
+                    if (action == _ReminderAction.edit) {
+                      onEdit();
+                    } else {
+                      onDelete();
+                    }
+                  },
+                  offset: const Offset(0, 32),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 6,
+                  shadowColor: Colors.black.withValues(alpha: 0.1),
+                  color: Colors.white,
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: dimmed ? AppColors.bg : const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.more_horiz_rounded,
+                      size: 16,
+                      color: AppColors.ink3,
+                    ),
+                  ),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: _ReminderAction.edit,
+                      height: 44,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: AppColors.accentLight,
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: const Icon(Icons.edit_rounded, size: 14, color: AppColors.accent),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text('编辑', style: TextStyle(fontSize: 14, color: AppColors.ink1)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _ReminderAction.delete,
+                      height: 44,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFEEEE),
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: const Icon(Icons.delete_outline_rounded, size: 14, color: Color(0xFFFF3B30)),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text('删除', style: TextStyle(fontSize: 14, color: Color(0xFFFF3B30))),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+              ],
+            ),
           ],
         ),
       ),
@@ -356,6 +509,8 @@ class _EmptyCard extends StatelessWidget {
   }
 }
 
+enum _ReminderAction { edit, delete }
+
 class _IconBtn extends StatelessWidget {
   const _IconBtn({required this.child, required this.onTap});
 
@@ -381,7 +536,7 @@ class _IconBtn extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
-// iOS 风格新建提醒底部面板
+// iOS 风格新建/编辑提醒底部面板
 // ─────────────────────────────────────────────────────────────
 typedef _SaveCallback =
     Future<void> Function(
@@ -391,20 +546,22 @@ typedef _SaveCallback =
       String? memberId,
     );
 
-class _CreateReminderSheet extends StatefulWidget {
-  const _CreateReminderSheet({
+class _ReminderFormSheet extends StatefulWidget {
+  const _ReminderFormSheet({
     required this.members,
     required this.onSave,
+    this.initialReminder,
   });
 
   final List<FamilyMember> members;
   final _SaveCallback onSave;
+  final AppReminder? initialReminder;
 
   @override
-  State<_CreateReminderSheet> createState() => _CreateReminderSheetState();
+  State<_ReminderFormSheet> createState() => _ReminderFormSheetState();
 }
 
-class _CreateReminderSheetState extends State<_CreateReminderSheet> {
+class _ReminderFormSheetState extends State<_ReminderFormSheet> {
   final _titleCtrl = TextEditingController();
   final _bodyCtrl = TextEditingController();
   late DateTime _remindAt;
@@ -414,11 +571,20 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
   @override
   void initState() {
     super.initState();
-    // 默认明天
-    final tomorrow = DateTime.now().add(const Duration(days: 1));
-    _remindAt = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
-    if (widget.members.isNotEmpty) {
-      _selectedMemberId = widget.members.first.id;
+    if (widget.initialReminder != null) {
+      // 编辑模式：预填现有数据
+      final r = widget.initialReminder!;
+      _titleCtrl.text = r.title;
+      _bodyCtrl.text = (r.body == '下次复诊提醒') ? '' : r.body;
+      _remindAt = r.remindAt;
+      _selectedMemberId = r.memberId;
+    } else {
+      // 新建模式：默认明天
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+      _remindAt = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
+      if (widget.members.isNotEmpty) {
+        _selectedMemberId = widget.members.first.id;
+      }
     }
   }
 
@@ -528,9 +694,9 @@ class _CreateReminderSheetState extends State<_CreateReminderSheet> {
                       style: TextStyle(fontSize: 16, color: Color(0xFF8A8A8F)),
                     ),
                   ),
-                  const Text(
-                    '新建提醒',
-                    style: TextStyle(
+                  Text(
+                    widget.initialReminder != null ? '编辑提醒' : '新建提醒',
+                    style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF1C1C1E),

@@ -569,6 +569,29 @@ class LocalDataRepository extends GetxService {
     });
   }
 
+  /// 更新提醒内容
+  Future<void> updateReminder(
+    String id, {
+    required String title,
+    required String body,
+    required DateTime remindAt,
+    String? memberId,
+  }) async {
+    await (_db.update(_db.reminders)..where((r) => r.id.equals(id))).write(
+      RemindersCompanion(
+        title: drift.Value(title.trim()),
+        body: drift.Value(body.trim()),
+        remindAt: drift.Value(remindAt),
+        memberId: drift.Value(memberId),
+      ),
+    );
+  }
+
+  /// 删除提醒
+  Future<void> deleteReminder(String id) async {
+    await (_db.delete(_db.reminders)..where((r) => r.id.equals(id))).go();
+  }
+
   Future<void> saveMedicalRecord({
     String? recordId,
     required String hospitalName,
