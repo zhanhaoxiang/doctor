@@ -31,7 +31,7 @@ class NotificationsPage extends GetView<NotificationsController> {
             child: Text(
               '清',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 14,
                 color: AppColors.ink2,
                 fontWeight: FontWeight.w500,
               ),
@@ -84,7 +84,7 @@ class _NoticeCard extends StatelessWidget {
             Text(
               item.title,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: AppColors.ink1,
               ),
@@ -92,12 +92,12 @@ class _NoticeCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               item.body,
-              style: const TextStyle(fontSize: 12, color: AppColors.ink2),
+              style: const TextStyle(fontSize: 14, color: AppColors.ink2),
             ),
             const SizedBox(height: 6),
             Text(
               item.relativeTime,
-              style: const TextStyle(fontSize: 11, color: AppColors.ink3),
+              style: const TextStyle(fontSize: 14, color: AppColors.ink3),
             ),
           ],
         ),
@@ -120,7 +120,7 @@ class _EmptyState extends StatelessWidget {
       ),
       child: const Text(
         '暂无通知',
-        style: TextStyle(fontSize: 13, color: AppColors.ink3),
+        style: TextStyle(fontSize: 15, color: AppColors.ink3),
       ),
     );
   }

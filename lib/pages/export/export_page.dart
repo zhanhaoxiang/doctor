@@ -80,7 +80,7 @@ class _ExportCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(item.btnLabel,
-                  style: const TextStyle(fontSize: 13, color: AppColors.accent, fontWeight: FontWeight.w500)),
+                  style: const TextStyle(fontSize: 15, color: AppColors.accent, fontWeight: FontWeight.w500)),
             ),
           ),
         ],

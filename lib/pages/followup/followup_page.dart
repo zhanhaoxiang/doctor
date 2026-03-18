@@ -100,13 +100,13 @@ class _FollowupCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             item.hospital,
-            style: const TextStyle(fontSize: 12, color: AppColors.ink3),
+            style: const TextStyle(fontSize: 14, color: AppColors.ink3),
           ),
           if ((item.note ?? '').isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               item.note!,
-              style: const TextStyle(fontSize: 12, color: AppColors.ink2),
+              style: const TextStyle(fontSize: 14, color: AppColors.ink2),
             ),
           ],
         ],
@@ -133,7 +133,7 @@ class _Tag extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 14,
           color: text,
           fontWeight: FontWeight.w500,
         ),
@@ -156,7 +156,7 @@ class _EmptyState extends StatelessWidget {
       ),
       child: const Text(
         '暂无复诊计划',
-        style: TextStyle(fontSize: 13, color: AppColors.ink3),
+        style: TextStyle(fontSize: 15, color: AppColors.ink3),
       ),
     );
   }

@@ -236,7 +236,7 @@ class _EmptyTimelineCard extends StatelessWidget {
       ),
       child: const Text(
         '还没有病历记录，点击右上角开始录入。',
-        style: TextStyle(fontSize: 13, color: AppColors.ink3),
+        style: TextStyle(fontSize: 15, color: AppColors.ink3),
       ),
     );
   }

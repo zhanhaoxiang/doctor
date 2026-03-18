@@ -78,7 +78,7 @@ class SearchPage extends StatelessWidget {
                           ),
                           child: Text(
                             '${_results.length}',
-                            style: const TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: 14, color: AppColors.accent, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
@@ -145,7 +145,7 @@ class SearchPage extends StatelessWidget {
             child: Text('输入医院/科室/症状...',
                 style: TextStyle(fontSize: 14, color: AppColors.ink3)),
           ),
-          const Text('筛选', style: TextStyle(fontSize: 13, color: AppColors.accent)),
+          const Text('筛选', style: TextStyle(fontSize: 15, color: AppColors.accent)),
         ],
       ),
     );
@@ -180,7 +180,7 @@ class _FilterChip extends StatelessWidget {
           style: BorderStyle.solid,
         ),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.accent)),
+      child: Text(label, style: const TextStyle(fontSize: 14, color: AppColors.accent)),
     );
   }
 }
@@ -228,7 +228,7 @@ class _ResultCard extends StatelessWidget {
             Row(
               children: [
                 Text(result.date,
-                    style: const TextStyle(fontSize: 11, color: AppColors.ink3)),
+                    style: const TextStyle(fontSize: 14, color: AppColors.ink3)),
                 const Spacer(),
                 const Icon(Icons.more_horiz_rounded, size: 16, color: AppColors.ink3),
               ],
@@ -237,10 +237,10 @@ class _ResultCard extends StatelessWidget {
             Text(result.hospital,
                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.ink1)),
             Text(result.dept,
-                style: const TextStyle(fontSize: 12, color: AppColors.ink3)),
+                style: const TextStyle(fontSize: 14, color: AppColors.ink3)),
             const SizedBox(height: 6),
             Text(result.summary,
-                style: const TextStyle(fontSize: 12, color: AppColors.ink2),
+                style: const TextStyle(fontSize: 14, color: AppColors.ink2),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis),
             const SizedBox(height: 8),
@@ -269,7 +269,7 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
-      child: Text(label, style: TextStyle(fontSize: 11, color: text, fontWeight: FontWeight.w500)),
+      child: Text(label, style: TextStyle(fontSize: 14, color: text, fontWeight: FontWeight.w500)),
     );
   }
 }

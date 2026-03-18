@@ -92,7 +92,7 @@ class AddPage extends StatelessWidget {
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.ink1)),
           const SizedBox(height: 6),
           const Text('支持医院病历本、处方单、检查报告等',
-              style: TextStyle(fontSize: 12, color: AppColors.ink3)),
+              style: TextStyle(fontSize: 14, color: AppColors.ink3)),
           const SizedBox(height: 16),
           GestureDetector(
             onTap: () => Get.toNamed(AppRoutes.ocrReview),
@@ -159,7 +159,7 @@ class AddPage extends StatelessWidget {
                   border: Border.all(color: AppColors.accent),
                 ),
                 child: const Text('添加附件',
-                    style: TextStyle(fontSize: 12, color: AppColors.accent)),
+                    style: TextStyle(fontSize: 14, color: AppColors.accent)),
               ),
             ),
           ],
@@ -194,10 +194,10 @@ class _FormRow extends StatelessWidget {
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: const TextStyle(fontSize: 13, color: AppColors.ink3)),
+                  Text(label, style: const TextStyle(fontSize: 15, color: AppColors.ink3)),
                   const SizedBox(height: 6),
                   Text(value,
-                      style: const TextStyle(fontSize: 13, color: AppColors.ink1),
+                      style: const TextStyle(fontSize: 15, color: AppColors.ink1),
                       maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               )
@@ -205,10 +205,10 @@ class _FormRow extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: 72,
-                    child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.ink3)),
+                    child: Text(label, style: const TextStyle(fontSize: 15, color: AppColors.ink3)),
                   ),
                   Expanded(
-                    child: Text(value, style: const TextStyle(fontSize: 13, color: AppColors.ink1)),
+                    child: Text(value, style: const TextStyle(fontSize: 15, color: AppColors.ink1)),
                   ),
                   if (hasChevron)
                     const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.ink3),
@@ -238,7 +238,7 @@ class _AttachChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: AppColors.ink3),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.ink2)),
+          Text(label, style: const TextStyle(fontSize: 14, color: AppColors.ink2)),
         ],
       ),
     );

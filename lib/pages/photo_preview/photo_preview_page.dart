@@ -136,7 +136,7 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -284,7 +284,7 @@ class PhotoPreviewPage extends GetView<PhotoPreviewController> {
                       '正在提取医院、科室、诊断、医嘱等信息',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 13,
+                        fontSize: 15,
                       ),
                     ),
                   ],

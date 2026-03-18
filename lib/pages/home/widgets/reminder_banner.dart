@@ -33,7 +33,7 @@ class ReminderBanner extends StatelessWidget {
                 Text(
                   '下次就诊：${appointment.formattedDate}',
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFFB45309),
                   ),
@@ -42,7 +42,7 @@ class ReminderBanner extends StatelessWidget {
                 Text(
                   '${appointment.hospital} · ${appointment.department}',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 14,
                     color: const Color(0xFFB45309).withValues(alpha: 0.8),
                   ),
                 ),

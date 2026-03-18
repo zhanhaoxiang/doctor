@@ -60,7 +60,7 @@ class TimelineCardItem extends StatelessWidget {
                             Text(
                               record.formattedDate,
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 14,
                                 color: AppColors.ink3,
                               ),
                             ),
@@ -70,7 +70,7 @@ class TimelineCardItem extends StatelessWidget {
                         Text(
                           record.aiSummary,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 14,
                             color: AppColors.ink2,
                             height: 1.5,
                           ),
@@ -119,7 +119,7 @@ class _TagChip extends StatelessWidget {
       child: Text(
         tag.label,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 14,
           color: hasBg ? Color(tag.textColorValue!) : AppColors.ink3,
         ),
       ),
@@ -146,7 +146,7 @@ class _ColoredTagChip extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: TextStyle(fontSize: 11, color: textColor)),
+      child: Text(label, style: TextStyle(fontSize: 14, color: textColor)),
     );
   }
 }

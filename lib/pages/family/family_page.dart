@@ -139,7 +139,7 @@ class _MemberCard extends StatelessWidget {
                     Text(
                       '${member.records}条记录 · ${member.followups}次复诊',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: AppColors.ink3,
                       ),
                     ),
@@ -155,7 +155,7 @@ class _MemberCard extends StatelessWidget {
                 child: Text(
                   member.badge,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 14,
                     color: member.member.tagTextColor,
                   ),
                 ),
@@ -190,7 +190,7 @@ class _EmptyState extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+        style: const TextStyle(fontSize: 15, color: AppColors.ink3),
       ),
     );
   }

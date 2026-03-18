@@ -49,11 +49,11 @@ class _VisitCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('近3个月就诊',
-              style: TextStyle(fontSize: 13, color: AppColors.ink3)),
+              style: TextStyle(fontSize: 15, color: AppColors.ink3)),
           const SizedBox(height: 8),
           const Text('5', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.ink1)),
           const Text('3次复诊 · 2次检查',
-              style: TextStyle(fontSize: 12, color: AppColors.ink3)),
+              style: TextStyle(fontSize: 14, color: AppColors.ink3)),
           const SizedBox(height: 12),
           _ProgressBar(value: 0.78),
         ],
@@ -76,7 +76,7 @@ class _MemberDistCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('成员分布', style: TextStyle(fontSize: 13, color: AppColors.ink3)),
+          const Text('成员分布', style: TextStyle(fontSize: 15, color: AppColors.ink3)),
           const SizedBox(height: 10),
           ..._data.map((d) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -84,11 +84,11 @@ class _MemberDistCard extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 40,
-                      child: Text(d.$1, style: const TextStyle(fontSize: 12, color: AppColors.ink2)),
+                      child: Text(d.$1, style: const TextStyle(fontSize: 14, color: AppColors.ink2)),
                     ),
                     Expanded(child: _ProgressBar(value: d.$3)),
                     const SizedBox(width: 8),
-                    Text('${d.$2}次', style: const TextStyle(fontSize: 12, color: AppColors.ink3)),
+                    Text('${d.$2}次', style: const TextStyle(fontSize: 14, color: AppColors.ink3)),
                   ],
                 ),
               )),
@@ -107,7 +107,7 @@ class _DeptCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('常见科室', style: TextStyle(fontSize: 13, color: AppColors.ink3)),
+          const Text('常见科室', style: TextStyle(fontSize: 15, color: AppColors.ink3)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -118,7 +118,7 @@ class _DeptCard extends StatelessWidget {
                     color: AppColors.accentLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(d, style: const TextStyle(fontSize: 12, color: AppColors.accentDark)),
+                  child: Text(d, style: const TextStyle(fontSize: 14, color: AppColors.accentDark)),
                 )).toList(),
           ),
         ],
@@ -134,10 +134,10 @@ class _FollowupCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('待复诊提醒', style: TextStyle(fontSize: 13, color: AppColors.ink3)),
+          const Text('待复诊提醒', style: TextStyle(fontSize: 15, color: AppColors.ink3)),
           const SizedBox(height: 8),
           const Text('2条', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.ink1)),
-          const Text('最近: 3天后', style: TextStyle(fontSize: 12, color: AppColors.ink3)),
+          const Text('最近: 3天后', style: TextStyle(fontSize: 14, color: AppColors.ink3)),
           const SizedBox(height: 12),
           _ProgressBar(value: 0.28),
         ],

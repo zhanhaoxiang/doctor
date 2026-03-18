@@ -30,7 +30,7 @@ class TimelineSection extends StatelessWidget {
               Text(
                 monthLabel,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 15,
                   color: AppColors.ink3,
                   letterSpacing: 0.5,
                 ),
@@ -38,7 +38,7 @@ class TimelineSection extends StatelessWidget {
               Text(
                 '${records.length} 条',
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 15,
                   color: AppColors.accent,
                   fontWeight: FontWeight.w500,
                 ),

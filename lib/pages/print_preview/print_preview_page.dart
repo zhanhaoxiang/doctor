@@ -64,7 +64,7 @@ class PrintPreviewPage extends StatelessWidget {
                 color: AppColors.accent, borderRadius: BorderRadius.circular(8),
               ),
               child: const Text('打印',
-                  style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
+                  style: TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -92,7 +92,7 @@ class PrintPreviewPage extends StatelessWidget {
           const SizedBox(height: 6),
           const Center(
             child: Text('成员: 全部 · 2026年1月 - 3月 · 共6条',
-                style: TextStyle(fontSize: 12, color: AppColors.ink3)),
+                style: TextStyle(fontSize: 14, color: AppColors.ink3)),
           ),
           const SizedBox(height: 16),
           const Divider(height: 1, color: AppColors.line),
@@ -124,13 +124,13 @@ class _SummaryRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 32,
-            child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.ink2)),
+            child: Text(label, style: const TextStyle(fontSize: 14, color: AppColors.ink2)),
           ),
           Expanded(
             child: Text('$hospital · $dept',
-                style: const TextStyle(fontSize: 12, color: AppColors.ink1)),
+                style: const TextStyle(fontSize: 14, color: AppColors.ink1)),
           ),
-          Text(date, style: const TextStyle(fontSize: 11, color: AppColors.ink3)),
+          Text(date, style: const TextStyle(fontSize: 14, color: AppColors.ink3)),
         ],
       ),
     );

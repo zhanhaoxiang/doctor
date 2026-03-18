@@ -99,7 +99,7 @@ class OcrReviewPage extends StatelessWidget {
         children: [
           Icon(Icons.camera_alt_rounded, size: 28, color: AppColors.ink3),
           SizedBox(height: 8),
-          Text('点击查看原图', style: TextStyle(fontSize: 13, color: AppColors.ink3)),
+          Text('点击查看原图', style: TextStyle(fontSize: 15, color: AppColors.ink3)),
         ],
       ),
     );
@@ -132,7 +132,7 @@ class _OcrFieldCard extends StatelessWidget {
           Row(
             children: [
               Text(field.label,
-                  style: const TextStyle(fontSize: 12, color: AppColors.ink3)),
+                  style: const TextStyle(fontSize: 14, color: AppColors.ink3)),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -141,7 +141,7 @@ class _OcrFieldCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text('${field.confidence}%',
-                    style: const TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                    style: const TextStyle(fontSize: 14, color: AppColors.accent, fontWeight: FontWeight.w600)),
               ),
             ],
           ),

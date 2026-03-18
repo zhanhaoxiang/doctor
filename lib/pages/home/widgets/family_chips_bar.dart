@@ -37,7 +37,7 @@ class FamilyChipsBar extends GetView<HomeController> {
                 child: Text(
                   member.name,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: isActive ? Colors.white : AppColors.ink2,
                     fontWeight:
                         isActive ? FontWeight.w600 : FontWeight.normal,

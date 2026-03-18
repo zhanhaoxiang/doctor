@@ -57,7 +57,7 @@ class CalendarPage extends StatelessWidget {
             children: _weekdays
                 .map((d) => Expanded(
                       child: Center(
-                        child: Text(d, style: const TextStyle(fontSize: 11, color: AppColors.ink3)),
+                        child: Text(d, style: const TextStyle(fontSize: 14, color: AppColors.ink3)),
                       ),
                     ))
                 .toList(),
@@ -123,10 +123,10 @@ class CalendarPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('妈妈 · 3月15日',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.ink1)),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink1)),
                     SizedBox(height: 3),
                     Text('北京协和医院 · 呼吸内科复诊',
-                        style: TextStyle(fontSize: 12, color: AppColors.ink3)),
+                        style: TextStyle(fontSize: 14, color: AppColors.ink3)),
                   ],
                 ),
               ),
@@ -173,7 +173,7 @@ class _DayCell extends StatelessWidget {
       child: Center(
         child: Text(
           '$day',
-          style: TextStyle(fontSize: 12, color: textColor, fontWeight: fontWeight),
+          style: TextStyle(fontSize: 14, color: textColor, fontWeight: fontWeight),
         ),
       ),
     );

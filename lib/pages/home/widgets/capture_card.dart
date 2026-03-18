@@ -64,7 +64,7 @@ class CaptureCard extends StatelessWidget {
                 SizedBox(height: 3),
                 Text(
                   '一键拍照识别病历单，自动填写就诊信息与医嘱。',
-                  style: TextStyle(fontSize: 12, color: AppColors.ink2),
+                  style: TextStyle(fontSize: 14, color: AppColors.ink2),
                 ),
               ],
             ),
@@ -81,7 +81,7 @@ class CaptureCard extends StatelessWidget {
             child: const Text(
               '立即拍照',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 14,
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),

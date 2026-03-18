@@ -166,7 +166,7 @@ class SettingsPage extends StatelessWidget {
             child: const Text(
               '已同步',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 14,
                 color: AppColors.accent,
                 fontWeight: FontWeight.w600,
               ),

@@ -65,7 +65,7 @@ class DetailPage extends GetView<DetailController> {
                     Text(
                       record.department ?? '未填写科室',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: AppColors.ink3,
                       ),
                     ),
@@ -89,7 +89,7 @@ class DetailPage extends GetView<DetailController> {
                     Text(
                       record.aiSummary,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 15,
                         color: AppColors.ink2,
                         height: 1.6,
                       ),
@@ -100,7 +100,7 @@ class DetailPage extends GetView<DetailController> {
                     Text(
                       record.doctorOrder.isEmpty ? '未填写' : record.doctorOrder,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 15,
                         color: AppColors.ink2,
                         height: 1.6,
                       ),
@@ -131,7 +131,7 @@ class DetailPage extends GetView<DetailController> {
                     if (record.attachments.isEmpty)
                       const Text(
                         '暂无附件',
-                        style: TextStyle(fontSize: 12, color: AppColors.ink3),
+                        style: TextStyle(fontSize: 14, color: AppColors.ink3),
                       )
                     else
                       Wrap(
@@ -149,7 +149,7 @@ class DetailPage extends GetView<DetailController> {
                         Text(
                           '单号: ${record.id}',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 14,
                             color: AppColors.ink3,
                           ),
                         ),
@@ -157,7 +157,7 @@ class DetailPage extends GetView<DetailController> {
                         Text(
                           '来源: ${record.source}',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 14,
                             color: AppColors.ink3,
                           ),
                         ),
@@ -231,7 +231,7 @@ class _PlaceholderCard extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+        style: const TextStyle(fontSize: 15, color: AppColors.ink3),
       ),
     );
   }
@@ -252,13 +252,13 @@ class _InfoRow extends StatelessWidget {
           width: 72,
           child: Text(
             label,
-            style: const TextStyle(fontSize: 12, color: AppColors.ink3),
+            style: const TextStyle(fontSize: 14, color: AppColors.ink3),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(fontSize: 12, color: AppColors.ink1),
+            style: const TextStyle(fontSize: 14, color: AppColors.ink1),
           ),
         ),
       ],
@@ -276,7 +276,7 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 13,
+        fontSize: 15,
         fontWeight: FontWeight.w600,
         color: AppColors.ink1,
       ),
@@ -299,7 +299,7 @@ class _Chip extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(label, style: TextStyle(fontSize: 12, color: text)),
+      child: Text(label, style: TextStyle(fontSize: 14, color: text)),
     );
   }
 }
@@ -363,7 +363,7 @@ class _ActionBtn extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(fontSize: 11, color: AppColors.ink2),
+              style: const TextStyle(fontSize: 14, color: AppColors.ink2),
             ),
           ],
         ),

@@ -185,7 +185,7 @@ class _SectionHeader extends StatelessWidget {
           child: Text(
             '$count',
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 14,
               color: AppColors.accent,
               fontWeight: FontWeight.w600,
             ),
@@ -276,7 +276,7 @@ class _ReminderCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       item.body,
-                      style: const TextStyle(fontSize: 12, color: AppColors.ink3),
+                      style: const TextStyle(fontSize: 14, color: AppColors.ink3),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -293,7 +293,7 @@ class _ReminderCard extends StatelessWidget {
                       Text(
                         item.dateText,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 14,
                           color: dimmed ? AppColors.ink3.withValues(alpha: 0.5) : AppColors.ink3,
                         ),
                       ),
@@ -302,7 +302,7 @@ class _ReminderCard extends StatelessWidget {
                         Text(
                           item.memberName!,
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 14,
                             color: AppColors.ink3,
                           ),
                         ),
@@ -351,7 +351,7 @@ class _EmptyCard extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+        style: const TextStyle(fontSize: 15, color: AppColors.ink3),
       ),
     );
   }

@@ -133,7 +133,7 @@ class _IosTextInputDialogState extends State<_IosTextInputDialog>
                         widget.subtitle!,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 15,
                           color: Color(0xFF8A8A8F),
                         ),
                       ),

@@ -86,7 +86,7 @@ class _ImportCard extends StatelessWidget {
           Text(title,
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.ink1)),
           const SizedBox(height: 4),
-          Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.ink3)),
+          Text(subtitle, style: const TextStyle(fontSize: 14, color: AppColors.ink3)),
           const SizedBox(height: 14),
           Row(
             children: buttons
@@ -101,7 +101,7 @@ class _ImportCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(b.label,
-                              style: const TextStyle(fontSize: 13, color: Colors.white)),
+                              style: const TextStyle(fontSize: 15, color: Colors.white)),
                         ),
                       ),
                     ))

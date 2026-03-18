@@ -87,7 +87,7 @@ class OnboardingPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
           SizedBox(height: 8),
           Text('安全存储就诊记录，AI辅助整理，\n让家人健康管理更简单',
-              style: TextStyle(fontSize: 13, color: Colors.white70, height: 1.6),
+              style: TextStyle(fontSize: 15, color: Colors.white70, height: 1.6),
               textAlign: TextAlign.center),
         ],
       ),
@@ -112,7 +112,7 @@ class OnboardingPage extends StatelessWidget {
                       const Text('✅', style: TextStyle(fontSize: 16)),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(f, style: const TextStyle(fontSize: 13, color: AppColors.ink1)),
+                        child: Text(f, style: const TextStyle(fontSize: 15, color: AppColors.ink1)),
                       ),
                     ],
                   ),

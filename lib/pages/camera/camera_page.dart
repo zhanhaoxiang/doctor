@@ -265,7 +265,7 @@ class _TipRow extends StatelessWidget {
                 desc,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 12,
+                  fontSize: 14,
                 ),
               ),
             ],

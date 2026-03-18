@@ -63,7 +63,7 @@ class EditPage extends GetView<EditController> {
                 width: 72,
                 child: Text(
                   '就诊成员',
-                  style: TextStyle(fontSize: 13, color: AppColors.ink3),
+                  style: TextStyle(fontSize: 15, color: AppColors.ink3),
                 ),
               ),
               Expanded(
@@ -71,7 +71,7 @@ class EditPage extends GetView<EditController> {
                   () => Text(
                     controller.selectedMemberLabel,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
                       color: AppColors.ink1,
                       fontWeight: FontWeight.w500,
                     ),
@@ -149,7 +149,7 @@ class EditPage extends GetView<EditController> {
                     width: 72,
                     child: Text(
                       '下次复诊',
-                      style: TextStyle(fontSize: 13, color: AppColors.ink3),
+                      style: TextStyle(fontSize: 15, color: AppColors.ink3),
                     ),
                   ),
                   Expanded(
@@ -157,7 +157,7 @@ class EditPage extends GetView<EditController> {
                       () => Text(
                         controller.followupDateLabel,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 15,
                           color: controller.followupDate.value != null
                               ? AppColors.accent
                               : AppColors.ink3.withValues(alpha: 0.5),
@@ -225,7 +225,7 @@ class EditPage extends GetView<EditController> {
             child: Text(
               '附件',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 color: AppColors.ink3,
                 fontWeight: FontWeight.w500,
               ),
@@ -239,7 +239,7 @@ class EditPage extends GetView<EditController> {
                 child: Text(
                   '暂无附件',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 15,
                     color: AppColors.ink3.withValues(alpha: 0.6),
                   ),
                 ),
@@ -391,7 +391,7 @@ class _FieldRow extends StatelessWidget {
             width: 72,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+              style: const TextStyle(fontSize: 15, color: AppColors.ink3),
             ),
           ),
           Expanded(
@@ -399,11 +399,11 @@ class _FieldRow extends StatelessWidget {
               controller: controller,
               readOnly: readOnly,
               onTap: onTap,
-              style: const TextStyle(fontSize: 13, color: AppColors.ink1),
+              style: const TextStyle(fontSize: 15, color: AppColors.ink1),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
-                  fontSize: 13,
+                  fontSize: 15,
                   color: AppColors.ink3.withValues(alpha: 0.6),
                 ),
                 border: InputBorder.none,
@@ -445,7 +445,7 @@ class _MultiFieldRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+            style: const TextStyle(fontSize: 15, color: AppColors.ink3),
           ),
           const SizedBox(height: 6),
           TextField(
@@ -454,14 +454,14 @@ class _MultiFieldRow extends StatelessWidget {
             maxLines: null,
             keyboardType: TextInputType.multiline,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 15,
               color: AppColors.ink1,
               height: 1.6,
             ),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 color: AppColors.ink3.withValues(alpha: 0.6),
               ),
               border: InputBorder.none,
@@ -498,17 +498,17 @@ class _FieldRowWithHistory extends StatelessWidget {
             width: 72,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 13, color: AppColors.ink3),
+              style: const TextStyle(fontSize: 15, color: AppColors.ink3),
             ),
           ),
           Expanded(
             child: TextField(
               controller: controller,
-              style: const TextStyle(fontSize: 13, color: AppColors.ink1),
+              style: const TextStyle(fontSize: 15, color: AppColors.ink1),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
-                  fontSize: 13,
+                  fontSize: 15,
                   color: AppColors.ink3.withValues(alpha: 0.6),
                 ),
                 border: InputBorder.none,
@@ -728,7 +728,7 @@ class _AddButton extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 14,
                 color: AppColors.accent,
                 fontWeight: FontWeight.w500,
               ),

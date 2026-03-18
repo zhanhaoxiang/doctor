@@ -46,7 +46,7 @@ Future<DateTime?> showCalendarDialog({
         color: Colors.white,
       ),
       weekdayLabelTextStyle: const TextStyle(
-        fontSize: 13,
+        fontSize: 15,
         fontWeight: FontWeight.w500,
         color: AppColors.ink3,
       ),

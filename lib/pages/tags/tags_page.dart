@@ -37,7 +37,7 @@ class TagsPage extends GetView<TagsController> {
                 return const _TagContainer(
                   child: Text(
                     '暂无标签，点击右上角添加',
-                    style: TextStyle(fontSize: 13, color: AppColors.ink3),
+                    style: TextStyle(fontSize: 15, color: AppColors.ink3),
                   ),
                 );
               }
@@ -131,7 +131,7 @@ class _TagChip extends StatelessWidget {
         child: Text(
           tag.label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 14,
             color: hasCustomStyle ? Color(tag.textColorValue!) : AppColors.ink2,
           ),
         ),

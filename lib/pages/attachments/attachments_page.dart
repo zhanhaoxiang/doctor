@@ -118,7 +118,7 @@ class _AttachmentListRow extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(attachment.name,
-                style: const TextStyle(fontSize: 13, color: AppColors.ink1)),
+                style: const TextStyle(fontSize: 15, color: AppColors.ink1)),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -131,7 +131,7 @@ class _AttachmentListRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(attachment.size,
-              style: const TextStyle(fontSize: 11, color: AppColors.ink3)),
+              style: const TextStyle(fontSize: 14, color: AppColors.ink3)),
         ],
       ),
     );
