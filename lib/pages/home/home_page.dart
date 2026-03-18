@@ -23,7 +23,7 @@ class HomePage extends GetView<HomeController> {
           Container(
             color: AppColors.bg,
             padding: EdgeInsets.only(top: topPadding),
-            child: const _TopBar(),
+            child: _TopBar(controller: controller),
           ),
           Expanded(
             child: CustomScrollView(
@@ -63,8 +63,7 @@ class HomePage extends GetView<HomeController> {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     sliver: SliverList.separated(
                       itemCount: groups.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 14),
+                      separatorBuilder: (context, index) => const SizedBox(height: 14),
                       itemBuilder: (_, index) => TimelineSection(
                         monthLabel: groups[index].label,
                         records: groups[index].records,
@@ -83,7 +82,9 @@ class HomePage extends GetView<HomeController> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar();
+  const _TopBar({required this.controller});
+
+  final HomeController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -91,27 +92,65 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
       child: Row(
         children: [
-          _IconButton(
-            onTap: () {},
-            child: const Icon(
-              Icons.menu_rounded,
-              size: 16,
-              color: AppColors.ink2,
-            ),
-          ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                '病历时间线',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.ink1,
-                ),
+          // 添加按钮
+          _AddMenuButton(),
+          const SizedBox(width: 8),
+          // 内联搜索框
+          Expanded(
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search_rounded, size: 14, color: AppColors.ink3),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: TextField(
+                      controller: controller.searchTextController,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.ink1,
+                        height: 1.2,
+                      ),
+                      decoration: const InputDecoration.collapsed(
+                        hintText: '搜索病历...',
+                        hintStyle: TextStyle(fontSize: 14, color: AppColors.ink3),
+                      ),
+                    ),
+                  ),
+                  Obx(
+                    () => controller.searchQuery.value.isNotEmpty
+                        ? GestureDetector(
+                            onTap: controller.clearSearch,
+                            child: const Icon(
+                              Icons.close_rounded,
+                              size: 14,
+                              color: AppColors.ink3,
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
               ),
             ),
           ),
-          _AddMenuButton(),
+          const SizedBox(width: 8),
+          // 搜索图标 → 完整搜索页
+          _IconButton(
+            onTap: () => Get.toNamed(AppRoutes.search),
+            child: const Icon(Icons.manage_search_rounded, size: 18, color: AppColors.ink2),
+          ),
+          const SizedBox(width: 8),
+          // 菜单 → 设置页
+          _IconButton(
+            onTap: () => Get.toNamed(AppRoutes.settings),
+            child: const Icon(Icons.menu_rounded, size: 16, color: AppColors.ink2),
+          ),
         ],
       ),
     );
@@ -129,8 +168,8 @@ class _IconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 32,
-        height: 32,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
@@ -173,8 +212,8 @@ class _AddMenuButton extends StatelessWidget {
         ),
       ],
       child: Container(
-        width: 32,
-        height: 32,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),

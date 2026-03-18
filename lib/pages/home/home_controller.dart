@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/family_member.dart';
@@ -15,6 +16,9 @@ class HomeController extends GetxController {
   final records = <MedicalRecord>[].obs;
   final nextAppointment = Rxn<NextAppointment>();
   final selectedMemberIndex = (-1).obs;
+  final searchQuery = ''.obs;
+
+  final TextEditingController searchTextController = TextEditingController();
 
   StreamSubscription<List<FamilyMember>>? _membersSubscription;
   StreamSubscription<List<MedicalRecord>>? _recordsSubscription;
@@ -23,6 +27,9 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    searchTextController.addListener(() {
+      searchQuery.value = searchTextController.text;
+    });
     _membersSubscription = _repository.watchMembers().listen((items) {
       familyMembers.assignAll(items);
       if (selectedMemberIndex.value >= items.length) {
@@ -39,11 +46,27 @@ class HomeController extends GetxController {
 
   List<MedicalRecord> get filteredRecords {
     final idx = selectedMemberIndex.value;
-    if (idx < 0 || idx >= familyMembers.length) return records;
-    final memberId = familyMembers[idx].id;
-    return records
-        .where((record) => record.familyMemberId == memberId)
-        .toList();
+    final q = searchQuery.value.trim().toLowerCase();
+
+    var list = records.toList();
+
+    if (idx >= 0 && idx < familyMembers.length) {
+      final memberId = familyMembers[idx].id;
+      list = list.where((r) => r.familyMemberId == memberId).toList();
+    }
+
+    if (q.isNotEmpty) {
+      list = list.where((r) {
+        return r.hospitalName.toLowerCase().contains(q) ||
+            (r.department?.toLowerCase().contains(q) ?? false) ||
+            (r.diagnosis?.toLowerCase().contains(q) ?? false) ||
+            (r.complaint?.toLowerCase().contains(q) ?? false) ||
+            r.aiSummary.toLowerCase().contains(q) ||
+            (r.doctorName?.toLowerCase().contains(q) ?? false);
+      }).toList();
+    }
+
+    return list;
   }
 
   List<({String label, List<MedicalRecord> records})> get groupedRecords {
@@ -70,8 +93,13 @@ class HomeController extends GetxController {
     selectedMemberIndex.value = selectedMemberIndex.value == index ? -1 : index;
   }
 
+  void clearSearch() {
+    searchTextController.clear();
+  }
+
   @override
   void onClose() {
+    searchTextController.dispose();
     _membersSubscription?.cancel();
     _recordsSubscription?.cancel();
     _appointmentSubscription?.cancel();

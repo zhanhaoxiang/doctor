@@ -322,6 +322,62 @@ class LocalDataRepository extends GetxService {
     return rows.map((row) => row.read<String>('department')).toList();
   }
 
+  /// 全文搜索病历：匹配医院名称、科室、诊断、主诉、AI摘要、医生姓名
+  Future<List<record_model.MedicalRecord>> searchMedicalRecords(
+    String query, {
+    String? memberId,
+  }) async {
+    final q = query.trim();
+    if (q.isEmpty) return [];
+    final like = '%$q%';
+    final variables = [
+      drift.Variable.withString(like),
+      drift.Variable.withString(like),
+      drift.Variable.withString(like),
+      drift.Variable.withString(like),
+      drift.Variable.withString(like),
+      drift.Variable.withString(like),
+      if (memberId != null) drift.Variable.withString(memberId),
+    ];
+    final memberFilter = memberId != null ? 'AND mr.member_id = ?' : '';
+    final rows = await _db
+        .customSelect(
+          '''
+          SELECT mr.id,
+                 mr.hospital_name,
+                 mr.department,
+                 mr.doctor_name,
+                 mr.visit_date,
+                 mr.complaint,
+                 mr.diagnosis,
+                 mr.ai_summary,
+                 mr.doctor_order,
+                 mr.source,
+                 mr.member_id,
+                 t.label  AS tag_label,
+                 t.bg_color   AS tag_bg_color,
+                 t.text_color AS tag_text_color
+            FROM medical_records mr
+            LEFT JOIN record_tag_links rtl ON rtl.record_id = mr.id
+            LEFT JOIN tags t ON t.id = rtl.tag_id
+           WHERE (
+                      mr.hospital_name LIKE ?
+                  OR  IFNULL(mr.department,  '') LIKE ?
+                  OR  IFNULL(mr.diagnosis,   '') LIKE ?
+                  OR  IFNULL(mr.complaint,   '') LIKE ?
+                  OR  mr.ai_summary           LIKE ?
+                  OR  IFNULL(mr.doctor_name, '') LIKE ?
+                 )
+                 $memberFilter
+           ORDER BY mr.visit_date DESC
+          ''',
+          variables: variables,
+          readsFrom: {_db.medicalRecords, _db.recordTagLinks, _db.tags},
+        )
+        .get();
+    return _groupRecordRows(rows);
+  }
+
   Stream<List<record_model.RecordTag>> watchTags() {
     final query = _db.select(_db.tags)..orderBy([(table) => drift.OrderingTerm.asc(table.createdAt)]);
     return query.watch().map(

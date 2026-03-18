@@ -1,8 +1,8 @@
-import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/app_toast.dart';
 import '../../routes/app_routes.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -90,11 +90,10 @@ class SettingsPage extends StatelessWidget {
       child: Row(
         children: [
           _IconBtn(
-            onTap: () =>
-                AppToast.show('打开菜单'),
+            onTap: Get.back,
             child: const Icon(
-              Icons.menu_rounded,
-              size: 16,
+              Icons.chevron_left_rounded,
+              size: 20,
               color: AppColors.ink2,
             ),
           ),
@@ -110,14 +109,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
           ),
-          _IconBtn(
-            onTap: () {},
-            child: const Icon(
-              Icons.settings_rounded,
-              size: 18,
-              color: AppColors.ink2,
-            ),
-          ),
+          const SizedBox(width: 32),
         ],
       ),
     );
