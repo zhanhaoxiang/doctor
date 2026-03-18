@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
 import '../../../data/models/next_appointment.dart';
+import '../../../routes/app_routes.dart';
 
 class ReminderBanner extends StatelessWidget {
-  final NextAppointment appointment;
+  final NextAppointment? appointment;
 
-  const ReminderBanner({super.key, required this.appointment});
+  const ReminderBanner({super.key, this.appointment});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Get.toNamed(AppRoutes.reminders),
+      child: appointment != null ? _AppointmentCard(appointment: appointment!) : const _EmptyCard(),
+    );
+  }
+}
+
+class _AppointmentCard extends StatelessWidget {
+  const _AppointmentCard({required this.appointment});
+
+  final NextAppointment appointment;
 
   @override
   Widget build(BuildContext context) {
@@ -49,13 +66,39 @@ class ReminderBanner extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(
-            Icons.chevron_right,
-            size: 18,
-            color: Color(0xFFD97706),
-          ),
+          const Icon(Icons.chevron_right, size: 18, color: Color(0xFFD97706)),
         ],
       ),
     );
   }
 }
+
+class _EmptyCard extends StatelessWidget {
+  const _EmptyCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x0F000000)),
+      ),
+      child: Row(
+        children: [
+          const Text('📅', style: TextStyle(fontSize: 16)),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              '暂无下次就诊安排',
+              style: TextStyle(fontSize: 14, color: Color(0xFF8A8A8F)),
+            ),
+          ),
+          const Icon(Icons.chevron_right, size: 18, color: Color(0xFF8A8A8F)),
+        ],
+      ),
+    );
+  }
+}
+

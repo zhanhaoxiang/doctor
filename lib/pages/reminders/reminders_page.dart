@@ -123,11 +123,10 @@ class _TopBar extends StatelessWidget {
       child: Row(
         children: [
           _IconBtn(
-            onTap: () =>
-                AppToast.show('打开菜单'),
+            onTap: Get.back,
             child: const Icon(
-              Icons.menu_rounded,
-              size: 16,
+              Icons.chevron_left_rounded,
+              size: 20,
               color: AppColors.ink2,
             ),
           ),

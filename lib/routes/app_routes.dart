@@ -2,6 +2,7 @@ abstract class AppRoutes {
   static const main = '/';
   static const settings = '/settings';
   static const search = '/search';
+  static const reminders = '/reminders';
   static const detail = '/detail';
   static const add = '/add';
   static const edit = '/edit';

@@ -38,6 +38,8 @@ import '../pages/print_preview/print_preview_binding.dart';
 import '../pages/print_preview/print_preview_page.dart';
 import '../pages/report_view/report_view_binding.dart';
 import '../pages/report_view/report_view_page.dart';
+import '../pages/reminders/reminders_binding.dart';
+import '../pages/reminders/reminders_page.dart';
 import '../pages/search/search_binding.dart';
 import '../pages/search/search_page.dart';
 import '../pages/settings/settings_page.dart';
@@ -51,6 +53,7 @@ abstract class AppPages {
   static final routes = [
     GetPage(name: AppRoutes.main, page: () => const MainPage(), binding: MainBinding()),
     GetPage(name: AppRoutes.settings, page: () => const SettingsPage()),
+    GetPage(name: AppRoutes.reminders, page: () => const RemindersPage(), binding: RemindersBinding()),
     GetPage(name: AppRoutes.search, page: () => const SearchPage(), binding: SearchBinding()),
     GetPage(name: AppRoutes.detail, page: () => const DetailPage(), binding: DetailBinding()),
     GetPage(name: AppRoutes.add, page: () => const AddPage(), binding: AddBinding()),

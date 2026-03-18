@@ -41,11 +41,9 @@ class HomePage extends GetView<HomeController> {
                       const CaptureCard(),
                       const SizedBox(height: 14),
                       Obx(() {
-                        final appointment = controller.nextAppointment.value;
-                        if (appointment == null) {
-                          return const SizedBox.shrink();
-                        }
-                        return ReminderBanner(appointment: appointment);
+                        return ReminderBanner(
+                          appointment: controller.nextAppointment.value,
+                        );
                       }),
                       const SizedBox(height: 14),
                     ]),
