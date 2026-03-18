@@ -16,4 +16,16 @@ class NextAppointment {
     final min = dateTime.minute.toString().padLeft(2, '0');
     return '$m月$d日 $h:$min';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NextAppointment &&
+          runtimeType == other.runtimeType &&
+          dateTime == other.dateTime &&
+          hospital == other.hospital &&
+          department == other.department;
+
+  @override
+  int get hashCode => dateTime.hashCode ^ hospital.hashCode ^ department.hashCode;
 }

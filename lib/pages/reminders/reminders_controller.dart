@@ -12,6 +12,7 @@ class RemindersController extends GetxController {
   final LocalDataRepository _repository;
   final reminders = <AppReminder>[].obs;
   final members = <FamilyMember>[].obs;
+  final hospitalHistory = <String>[].obs;
   StreamSubscription<List<AppReminder>>? _remindersSubscription;
   StreamSubscription<List<FamilyMember>>? _membersSubscription;
 
@@ -22,6 +23,12 @@ class RemindersController extends GetxController {
       reminders.assignAll,
     );
     _membersSubscription = _repository.watchMembers().listen(members.assignAll);
+    _loadHospitalHistory();
+  }
+
+  Future<void> _loadHospitalHistory() async {
+    final history = await _repository.loadHospitalHistory();
+    hospitalHistory.assignAll(history);
   }
 
   List<AppReminder> remindersForDay(DateTime date) {
@@ -38,12 +45,14 @@ class RemindersController extends GetxController {
     required String body,
     required DateTime remindAt,
     String? memberId,
+    String type = 'followup',
   }) {
     return _repository.addReminder(
       title: title,
       body: body,
       remindAt: remindAt,
       memberId: memberId,
+      type: type,
     );
   }
 

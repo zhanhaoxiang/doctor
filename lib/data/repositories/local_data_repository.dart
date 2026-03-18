@@ -212,25 +212,20 @@ class LocalDataRepository extends GetxService {
   }
 
   Stream<NextAppointment?> watchNextAppointment() {
-    // 优先从复诊提醒（type=followup）中读取，再 fallback 到 followups 表
+    // 从 reminders 表中取最近的复诊提醒
     return _db
         .customSelect(
           '''
           SELECT title AS hospital, body AS department, remind_at AS scheduled_at
             FROM reminders
            WHERE type = 'followup' AND remind_at >= ?
-           UNION ALL
-          SELECT hospital, department, scheduled_at
-            FROM followups
-           WHERE scheduled_at >= ?
-           ORDER BY scheduled_at ASC
+           ORDER BY remind_at ASC
            LIMIT 1
           ''',
           variables: [
             drift.Variable.withDateTime(DateTime.now()),
-            drift.Variable.withDateTime(DateTime.now()),
           ],
-          readsFrom: {_db.reminders, _db.followups},
+          readsFrom: {_db.reminders},
         )
         .watch()
         .map((rows) {
@@ -241,7 +236,8 @@ class LocalDataRepository extends GetxService {
             hospital: row.read<String>('hospital'),
             department: row.read<String>('department'),
           );
-        });
+        })
+        .distinct();
   }
 
   Future<record_model.MedicalRecord?> getMedicalRecord(String recordId) async {

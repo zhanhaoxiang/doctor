@@ -40,7 +40,7 @@ class HomeController extends GetxController {
       records.assignAll,
     );
     _appointmentSubscription = _repository.watchNextAppointment().listen(
-      nextAppointment.call,
+      (val) => nextAppointment.value = val,
     );
   }
 

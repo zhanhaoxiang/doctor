@@ -1,10 +1,10 @@
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:doctor/core/utils/app_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/calendar_dialog.dart';
 import '../../data/models/app_reminder.dart';
 import '../../data/models/family_member.dart';
 import 'reminders_controller.dart';
@@ -29,13 +29,14 @@ class RemindersPage extends GetView<RemindersController> {
               final now = DateTime.now();
               final today = controller.remindersForDay(now);
               final upcoming = controller.reminders
-                  .where((r) =>
-                      r.remindAt.isAfter(DateTime(now.year, now.month, now.day + 1)) &&
-                      r.remindAt.isBefore(now.add(const Duration(days: 30))))
+                  .where(
+                    (r) =>
+                        r.remindAt.isAfter(DateTime(now.year, now.month, now.day + 1)) &&
+                        r.remindAt.isBefore(now.add(const Duration(days: 30))),
+                  )
                   .toList();
               final history = controller.reminders
-                  .where((r) => r.remindAt
-                      .isBefore(DateTime(now.year, now.month, now.day)))
+                  .where((r) => r.remindAt.isBefore(DateTime(now.year, now.month, now.day)))
                   .toList()
                   .reversed
                   .toList();
@@ -111,12 +112,14 @@ class RemindersPage extends GetView<RemindersController> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => _ReminderFormSheet(
         members: controller.members.toList(),
+        hospitalHistory: controller.hospitalHistory.toList(),
         onSave: (title, body, remindAt, memberId) async {
           await controller.addReminder(
             title: title,
             body: body,
             remindAt: remindAt,
             memberId: memberId,
+            type: 'followup',
           );
         },
       ),
@@ -130,6 +133,7 @@ class RemindersPage extends GetView<RemindersController> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => _ReminderFormSheet(
         members: controller.members.toList(),
+        hospitalHistory: controller.hospitalHistory.toList(),
         initialReminder: item,
         onSave: (title, body, remindAt, memberId) async {
           await controller.updateReminder(
@@ -323,15 +327,11 @@ class _ReminderCard extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: item.isFollowup
-                    ? AppColors.accentLight
-                    : const Color(0xFFF0F0F5),
+                color: item.isFollowup ? AppColors.accentLight : const Color(0xFFF0F0F5),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
-                item.isFollowup
-                    ? Icons.event_available_rounded
-                    : Icons.notifications_outlined,
+                item.isFollowup ? Icons.event_available_rounded : Icons.notifications_outlined,
                 size: 18,
                 color: item.isFollowup ? AppColors.accent : AppColors.ink3,
               ),
@@ -549,11 +549,13 @@ typedef _SaveCallback =
 class _ReminderFormSheet extends StatefulWidget {
   const _ReminderFormSheet({
     required this.members,
+    required this.hospitalHistory,
     required this.onSave,
     this.initialReminder,
   });
 
   final List<FamilyMember> members;
+  final List<String> hospitalHistory;
   final _SaveCallback onSave;
   final AppReminder? initialReminder;
 
@@ -562,24 +564,33 @@ class _ReminderFormSheet extends StatefulWidget {
 }
 
 class _ReminderFormSheetState extends State<_ReminderFormSheet> {
-  final _titleCtrl = TextEditingController();
+  final _hospitalCtrl = TextEditingController();
   final _bodyCtrl = TextEditingController();
+  final _hospitalFocus = FocusNode();
   late DateTime _remindAt;
   String? _selectedMemberId;
   bool _saving = false;
 
+  List<String> get _filteredSuggestions {
+    final q = _hospitalCtrl.text.trim().toLowerCase();
+    final hist = widget.hospitalHistory;
+    if (q.isEmpty) return hist.take(6).toList();
+    return hist.where((h) => h.toLowerCase().contains(q)).take(6).toList();
+  }
+
   @override
   void initState() {
     super.initState();
+    _hospitalFocus.addListener(() => setState(() {}));
     if (widget.initialReminder != null) {
       // 编辑模式：预填现有数据
       final r = widget.initialReminder!;
-      _titleCtrl.text = r.title;
+      _hospitalCtrl.text = r.title;
       _bodyCtrl.text = (r.body == '下次复诊提醒') ? '' : r.body;
       _remindAt = r.remindAt;
       _selectedMemberId = r.memberId;
     } else {
-      // 新建模式：默认明天
+      // 新建模式：默认明天上午9点
       final tomorrow = DateTime.now().add(const Duration(days: 1));
       _remindAt = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9, 0);
       if (widget.members.isNotEmpty) {
@@ -590,8 +601,9 @@ class _ReminderFormSheetState extends State<_ReminderFormSheet> {
 
   @override
   void dispose() {
-    _titleCtrl.dispose();
+    _hospitalCtrl.dispose();
     _bodyCtrl.dispose();
+    _hospitalFocus.dispose();
     super.dispose();
   }
 
@@ -599,26 +611,13 @@ class _ReminderFormSheetState extends State<_ReminderFormSheet> {
     final y = dt.year;
     final mo = dt.month.toString().padLeft(2, '0');
     final d = dt.day.toString().padLeft(2, '0');
-    return '$y-$mo-$d';
+    return '$y年$mo月$d日';
   }
 
   String get _selectedMemberName {
     if (_selectedMemberId == null) return '不指定';
     final match = widget.members.where((m) => m.id == _selectedMemberId).toList();
     return match.isNotEmpty ? match.first.name : '不指定';
-  }
-
-  Future<void> _pickDate() async {
-    final date = await showCalendarDialog(
-      context: context,
-      initialDate: _remindAt,
-      minimumDate: DateTime.now().subtract(const Duration(days: 365)),
-      maximumDate: DateTime.now().add(const Duration(days: 365 * 2)),
-    );
-    if (date == null || !mounted) return;
-    setState(() {
-      _remindAt = DateTime(date.year, date.month, date.day, 9, 0);
-    });
   }
 
   Future<void> _pickMember() async {
@@ -637,15 +636,15 @@ class _ReminderFormSheetState extends State<_ReminderFormSheet> {
   }
 
   Future<void> _save() async {
-    final title = _titleCtrl.text.trim();
+    final hospital = _hospitalCtrl.text.trim();
     final body = _bodyCtrl.text.trim();
-    if (title.isEmpty) {
-      AppToast.show('请填写提醒标题');
+    if (hospital.isEmpty) {
+      AppToast.show('请填写就诊医院');
       return;
     }
     setState(() => _saving = true);
     try {
-      await widget.onSave(title, body, _remindAt, _selectedMemberId);
+      await widget.onSave(hospital, body, _remindAt, _selectedMemberId);
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
       AppToast.error('保存失败：$error');
@@ -656,13 +655,17 @@ class _ReminderFormSheetState extends State<_ReminderFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final suggestions = _filteredSuggestions;
+    final showSuggestions = _hospitalFocus.hasFocus && suggestions.isNotEmpty;
+
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFFF2F2F7),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      padding: EdgeInsets.only(bottom: bottomInset),
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.92),
       child: SafeArea(
         top: false,
         child: Column(
@@ -719,139 +722,288 @@ class _ReminderFormSheetState extends State<_ReminderFormSheet> {
                 ],
               ),
             ),
-            // 表单
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                children: [
-                  // 标题 & 内容
-                  _FormCard(
+            // 可滚动表单主体
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset : 16),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: Column(
                     children: [
-                      _FormField(
-                        label: '标题',
-                        controller: _titleCtrl,
-                        hint: '提醒标题',
-                      ),
-                      const _Divider(),
-                      _FormField(
-                        label: '备注',
-                        controller: _bodyCtrl,
-                        hint: '可选，备注信息',
-                        minLines: 2,
-                        maxLines: 4,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // 日期 & 成员
-                  _FormCard(
-                    children: [
-                      // 提醒日期
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: _pickDate,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 13,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 28,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFF9F0A),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.calendar_today_rounded,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              const Text(
-                                '提醒日期',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF1C1C1E),
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                _formatDate(_remindAt),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF8A8A8F),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.chevron_right_rounded,
-                                size: 16,
-                                color: Color(0xFFC7C7CC),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (widget.members.isNotEmpty) ...[
-                        const _Divider(indent: 52),
-                        // 成员选择
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: _pickMember,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 13,
-                            ),
+                      // ── 就诊日期（内联日历，最重要）────────────────────────
+                      _FormCard(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
                             child: Row(
                               children: [
                                 Container(
                                   width: 28,
                                   height: 28,
                                   decoration: BoxDecoration(
-                                    color: AppColors.accent,
+                                    color: const Color(0xFFFF9F0A),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
-                                    Icons.person_rounded,
+                                    Icons.calendar_today_rounded,
                                     size: 14,
                                     color: Colors.white,
                                   ),
                                 ),
                                 const SizedBox(width: 10),
                                 const Text(
-                                  '提醒成员',
+                                  '就诊日期',
                                   style: TextStyle(
                                     fontSize: 14,
+                                    fontWeight: FontWeight.w600,
                                     color: Color(0xFF1C1C1E),
                                   ),
                                 ),
                                 const Spacer(),
                                 Text(
-                                  _selectedMemberName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF8A8A8F),
+                                  _formatDate(_remindAt),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.accent,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.chevron_right_rounded,
-                                  size: 16,
-                                  color: Color(0xFFC7C7CC),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    '必填',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Color(0xFFFF3B30),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
                           ),
+                          CalendarDatePicker2(
+                            config: CalendarDatePicker2Config(
+                              calendarType: CalendarDatePicker2Type.single,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+                              currentDate: _remindAt,
+                              selectedDayHighlightColor: AppColors.accent,
+                              centerAlignModePicker: true,
+                              customModePickerIcon: const SizedBox(),
+                              controlsTextStyle: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1C1C1E),
+                              ),
+                              dayTextStyle: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF1C1C1E),
+                              ),
+                              selectedDayTextStyle: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              todayTextStyle: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.accent,
+                              ),
+                              weekdayLabelTextStyle: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8A8A8F),
+                              ),
+                              yearTextStyle: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1C1C1E),
+                              ),
+                              disabledDayTextStyle: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFFC7C7CC),
+                              ),
+                            ),
+                            value: [_remindAt],
+                            onValueChanged: (dates) {
+                              if (dates.isNotEmpty) {
+                                final d = dates.first;
+                                setState(() => _remindAt = DateTime(d.year, d.month, d.day, 9, 0));
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // ── 医院 + 备注 ──────────────────────────────────────
+                      _FormCard(
+                        children: [
+                          // 医院输入框
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                RichText(
+                                  text: const TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: '医院',
+                                        style: TextStyle(fontSize: 14, color: Color(0xFF8A8A8F)),
+                                      ),
+                                      TextSpan(
+                                        text: ' *',
+                                        style: TextStyle(fontSize: 14, color: Color(0xFFFF3B30)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _hospitalCtrl,
+                                    focusNode: _hospitalFocus,
+                                    style: const TextStyle(fontSize: 14, color: Color(0xFF1C1C1E)),
+                                    onChanged: (_) => setState(() {}),
+                                    decoration: const InputDecoration(
+                                      hintText: '请输入就诊医院',
+                                      hintStyle: TextStyle(fontSize: 14, color: Color(0xFFC7C7CC)),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                  ),
+                                ),
+                                if (_hospitalCtrl.text.isNotEmpty)
+                                  GestureDetector(
+                                    onTap: () => setState(() => _hospitalCtrl.clear()),
+                                    child: const Icon(
+                                      Icons.cancel,
+                                      size: 16,
+                                      color: Color(0xFFC7C7CC),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          // 历史下拉建议
+                          if (showSuggestions) ...[
+                            Container(
+                              height: 0.5,
+                              color: const Color(0x1A000000),
+                              margin: const EdgeInsets.only(left: 14),
+                            ),
+                            ...suggestions.map(
+                              (h) => GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () {
+                                  _hospitalCtrl.text = h;
+                                  _hospitalFocus.unfocus();
+                                  setState(() {});
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.history_rounded,
+                                        size: 14,
+                                        color: AppColors.ink3,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        h,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.ink2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                          const _Divider(),
+                          // 备注
+                          _FormField(
+                            label: '备注',
+                            controller: _bodyCtrl,
+                            hint: '可选，备注信息',
+                            minLines: 2,
+                            maxLines: 4,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // ── 提醒成员 ──────────────────────────────────────────
+                      if (widget.members.isNotEmpty)
+                        _FormCard(
+                          children: [
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: _pickMember,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 13,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.accent,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.person_rounded,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      '提醒成员',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF1C1C1E),
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      _selectedMemberName,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF8A8A8F),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.chevron_right_rounded,
+                                      size: 16,
+                                      color: Color(0xFFC7C7CC),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      const SizedBox(height: 16),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ],
@@ -992,9 +1144,7 @@ class _MemberTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: initial == '—'
-                        ? const Color(0xFF8A8A8F)
-                        : avatarColor,
+                    color: initial == '—' ? const Color(0xFF8A8A8F) : avatarColor,
                   ),
                 ),
               ),
@@ -1098,16 +1248,14 @@ class _FormField extends StatelessWidget {
 }
 
 class _Divider extends StatelessWidget {
-  const _Divider({this.indent = 78});
-
-  final double indent;
+  const _Divider();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 0.5,
       color: const Color(0x1A000000),
-      margin: EdgeInsets.only(left: indent),
+      margin: const EdgeInsets.only(left: 78),
     );
   }
 }
