@@ -29,6 +29,7 @@ class EditController extends GetxController {
   final historyDepartments = <String>[].obs;
   final selectedMemberId = RxnString();
   final followupDate = Rxn<DateTime>();
+  final followupDateCtrl = TextEditingController();
   final isSaving = false.obs;
 
   final _picker = ImagePicker();
@@ -78,7 +79,12 @@ class EditController extends GetxController {
     attachments.assignAll(record.attachments);
     selectedMemberId.value = record.familyMemberId;
     // 加载已有的复诊提醒日期
-    followupDate.value = await _repository.getFollowupReminderDate(id);
+    final fDate = await _repository.getFollowupReminderDate(id);
+    followupDate.value = fDate;
+    if (fDate != null) {
+      followupDateCtrl.text =
+          '${fDate.year}年${fDate.month.toString().padLeft(2, '0')}月${fDate.day.toString().padLeft(2, '0')}日';
+    }
   }
 
   void _fillFromRecognition(RecognitionResult? result, List<String>? imagePaths) {
@@ -139,21 +145,23 @@ class EditController extends GetxController {
     );
   }
 
+  void clearFollowupDate() {
+    followupDate.value = null;
+    followupDateCtrl.text = '';
+  }
+
   Future<void> pickFollowupDate(BuildContext context) async {
     final picked = await showCalendarDialog(
       context: context,
       initialDate: followupDate.value,
-      minimumDate: DateTime.now(),
+      minimumDate: DateTime(2000),
+      maximumDate: DateTime.now().add(const Duration(days: 365 * 3)),
     );
-    if (picked != null) followupDate.value = picked;
-  }
-
-  void clearFollowupDate() => followupDate.value = null;
-
-  String get followupDateLabel {
-    final d = followupDate.value;
-    if (d == null) return '不设置';
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    if (picked != null) {
+      followupDate.value = DateTime(picked.year, picked.month, picked.day);
+      followupDateCtrl.text =
+          '${picked.year}年${picked.month.toString().padLeft(2, '0')}月${picked.day.toString().padLeft(2, '0')}日';
+    }
   }
 
   Future<void> pickDate(BuildContext context) async {
@@ -222,6 +230,7 @@ class EditController extends GetxController {
     departmentCtrl.dispose();
     doctorCtrl.dispose();
     visitDateCtrl.dispose();
+    followupDateCtrl.dispose();
     diagnosisCtrl.dispose();
     prescriptionCtrl.dispose();
     summaryCtrl.dispose();

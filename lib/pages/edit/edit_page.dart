@@ -40,6 +40,10 @@ class EditPage extends GetView<EditController> {
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          sliver: SliverToBoxAdapter(child: _buildFollowupCard(context)),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           sliver: SliverToBoxAdapter(child: _buildAiCard()),
         ),
         SliverPadding(
@@ -136,60 +140,37 @@ class EditPage extends GetView<EditController> {
             controller: controller.diagnosisCtrl,
             hint: '请输入诊断结论',
           ),
-          _divider(),
-          // 下次复诊时间
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => controller.pickFollowupDate(context),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 72,
-                    child: Text(
-                      '下次复诊',
-                      style: TextStyle(fontSize: 15, color: AppColors.ink3),
-                    ),
-                  ),
-                  Expanded(
-                    child: Obx(
-                      () => Text(
-                        controller.followupDateLabel,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: controller.followupDate.value != null
-                              ? AppColors.accent
-                              : AppColors.ink3.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Obx(
-                    () => controller.followupDate.value != null
-                        ? GestureDetector(
-                            onTap: controller.clearFollowupDate,
-                            child: const Padding(
-                              padding: EdgeInsets.only(left: 4),
-                              child: Icon(
-                                Icons.close_rounded,
-                                size: 14,
-                                color: AppColors.ink3,
-                              ),
-                            ),
-                          )
-                        : const Icon(
-                            Icons.chevron_right_rounded,
-                            size: 16,
-                            color: AppColors.ink3,
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFollowupCard(BuildContext context) {
+    return _CardContainer(
+      child: Obx(() {
+        final hasDate = controller.followupDate.value != null;
+        return _FieldRow(
+          label: '下次复诊',
+          controller: controller.followupDateCtrl,
+          hint: '点击选择日期',
+          readOnly: true,
+          suffix: hasDate
+              ? GestureDetector(
+                  onTap: controller.clearFollowupDate,
+                  child: const Icon(
+                    Icons.close_rounded,
+                    size: 14,
+                    color: AppColors.ink3,
+                  ),
+                )
+              : const Icon(
+                  Icons.calendar_today_rounded,
+                  size: 14,
+                  color: AppColors.ink3,
+                ),
+          onTap: () => controller.pickFollowupDate(context),
+        );
+      }),
     );
   }
 
